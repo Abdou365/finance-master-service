@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id          String     @id() @default(uuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now())
+  title       String?    @default("")
+  description String?
+  userId      String?
+  Item        Item[]
+  Objectif    Objectif[]
+  status      ItemStatus @default(published)
+}
+
+enum ItemStatus {
+  published
+  deleted
+}
+
+enum Recurrence {
+  day
+  week
+  month
+  year
+}
+
+model Item {
+  id          String     @id() @default(uuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now())
+  title       String?    @default("")
+  description String?
+  value       Float
+  category    String?
+  isExpense   Boolean?   @default(true)
+  date        DateTime
+  accountId   String
+  userId      String?
+  status      ItemStatus @default(published)
+  account     Account    @relation(fields: [accountId], references: [id])
+}
+
+model Objectif {
+  id               String      @id() @default(uuid())
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @default(now())
+  title            String?     @default("")
+  description      String?
+  operation        Json?
+  fromDate         DateTime?
+  toDate           DateTime?
+  recurrence       Recurrence?
+  customRecurrence Json?
+  accountId        String
+  userId           String?
+  account          Account     @relation(fields: [accountId], references: [id])
+  status           ItemStatus  @default(published)
+}
