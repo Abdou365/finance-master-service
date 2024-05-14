@@ -16,7 +16,7 @@ datasource db {
 model Account {
   id          String     @id() @default(uuid())
   createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   title       String?    @default("")
   description String?
   userId      String?
@@ -27,6 +27,7 @@ model Account {
 
 enum ItemStatus {
   published
+  archived
   deleted
 }
 
@@ -40,7 +41,7 @@ enum Recurrence {
 model Item {
   id          String     @id() @default(uuid())
   createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   title       String?    @default("")
   description String?
   value       Float
@@ -54,18 +55,35 @@ model Item {
 }
 
 model Objectif {
-  id               String      @id() @default(uuid())
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @default(now())
-  title            String?     @default("")
-  description      String?
-  operation        Json?
-  fromDate         DateTime?
-  toDate           DateTime?
-  recurrence       Recurrence?
-  customRecurrence Json?
+  id               String         @id() @default(uuid())
   accountId        String
   userId           String?
-  account          Account     @relation(fields: [accountId], references: [id])
-  status           ItemStatus  @default(published)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now())
+  title            String?        @default("")
+  description      String?
+  from             DateTime?
+  to               DateTime?
+  deadline         DateTime?
+  targetAmount     Float
+  categories       String[]
+  recurrence       Recurrence?
+  customRecurrence Json?
+  isCompleted      Boolean        @default(false)
+  type             ObjectifType   @default(savings)
+  account          Account        @relation(fields: [accountId], references: [id])
+  status           ObjectifStatus @default(active)
+}
+
+enum ObjectifType {
+  savings
+  budget
+  income
+}
+
+enum ObjectifStatus {
+  active
+  completed
+  archived
+  deleted
 }

@@ -8,8 +8,6 @@ export class AccountController {
 
   @Post()
   create(@Body() data: Account) {
-    console.log(data);
-
     return this.accountService.upsert({
       where: { id: data?.id },
       create: data,

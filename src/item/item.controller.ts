@@ -8,8 +8,6 @@ export class ItemController {
 
   @Post()
   upsert(@Body() datas: Item[]) {
-    console.log(datas);
-
     const update = datas.map(
       async (data) =>
         await this.itemService.upsert({
