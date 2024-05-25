@@ -3,17 +3,29 @@ import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class ItemService {
-  account = new PrismaClient().item;
+  db = new PrismaClient();
+  item = this.db.item;
 
   async upsert(data: Prisma.ItemUpsertArgs) {
-    return this.account.upsert(data);
+    return this.item.upsert(data);
   }
 
   findAll = async () => {
-    return this.account.findMany();
+    return this.item.findMany();
   };
 
   findAllByAccount = async (where: Prisma.ItemWhereInput) => {
-    return this.account.findMany({ where });
+    return this.item.findMany({ where });
+  };
+
+  findAllItemCategory = async (accountId: string) => {
+    const res: { category: string }[] = await this.db.$queryRawUnsafe(`
+    select category
+    from "public"."Item"
+    where "Item"."accountId" = '${accountId}'
+    group By category
+    `);
+
+    return res.map((cat) => cat.category);
   };
 }

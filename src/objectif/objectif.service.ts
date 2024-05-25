@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { groupBy, partition, sumBy } from 'lodash';
 import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
+import { computeObjectif } from './objectif.utils';
 
 @Injectable()
 export class ObjectifService {
@@ -10,20 +11,21 @@ export class ObjectifService {
 
   async create(upsertData: Prisma.ObjectifUpsertArgs) {
     const res = await this.objeectif.upsert(upsertData);
-    console.log(res);
-
     return res;
   }
 
   async findAll(where: Prisma.ObjectifWhereInput) {
-    const objectifs = await this.objeectif.findMany({ where });
+    const rawObjectifs = await this.objeectif.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { title: 'asc' }],
+    });
 
-    if (objectifs.length === 0) {
+    if (rawObjectifs.length === 0) {
       return [];
     }
 
     const items = await this.db.item.findMany({
-      where: { status: 'published', accountId: objectifs[0].accountId },
+      where: { status: 'published', accountId: rawObjectifs[0].accountId },
       select: {
         id: true,
         category: true,
@@ -33,119 +35,21 @@ export class ObjectifService {
       },
     });
 
-    const [expense, incomes] = partition(items, (item) => item.isExpense);
+    const objectifs = computeObjectif(rawObjectifs, items);
+    const [completed, opened] = partition(
+      objectifs,
+      (objectif) => objectif.progress === 100,
+    );
 
-    const expenseByCategory = groupBy(expense, 'category');
-
-    const newObj = objectifs.map((objectif) => {
-      if (objectif.type === 'savings') {
-        if (objectif.categories.length === 0) {
-          if (objectif.from && objectif.to) {
-            const currentAmount = sumBy(
-              expense.filter(
-                (item) =>
-                  objectif.from <= item.date && objectif.to >= item.date,
-              ),
-              'value',
-            );
-            return {
-              ...objectif,
-              currentAmount,
-              progress: (currentAmount / objectif.targetAmount) * 100,
-            };
-          }
-          const currentAmount = sumBy(expense, 'value');
-          return {
-            ...objectif,
-            currentAmount,
-            progress: (currentAmount / objectif.targetAmount) * 100,
-          };
-        }
-
-        if (objectif.from && objectif.to) {
-          const currentAmount = sumBy(
-            objectif.categories
-              .map((category) => expenseByCategory[category])
-              .flat()
-              .filter(
-                (item) =>
-                  objectif.from <= item?.date && objectif.to >= item?.date,
-              ),
-            'value',
-          );
-          return {
-            ...objectif,
-            currentAmount,
-            progress: (currentAmount / objectif.targetAmount) * 100,
-          };
-        }
-        const currentAmount = sumBy(
-          objectif.categories
-            .map((category) => expenseByCategory[category])
-            .flat(),
-          'value',
-        );
-        return {
-          ...objectif,
-          currentAmount,
-          progress: (currentAmount / objectif.targetAmount) * 100,
-        };
-      }
-      if (objectif.type === 'income') {
-        if (objectif.categories.length === 0) {
-          if (objectif.from && objectif.to) {
-            const currentAmount = sumBy(
-              incomes.filter(
-                (item) =>
-                  objectif.from <= item.date && objectif.to >= item.date,
-              ),
-              'value',
-            );
-            return {
-              ...objectif,
-              currentAmount,
-              progress: (currentAmount / objectif.targetAmount) * 100,
-            };
-          }
-          const currentAmount = sumBy(incomes, 'value');
-          return {
-            ...objectif,
-            currentAmount,
-            progress: (currentAmount / objectif.targetAmount) * 100,
-          };
-        }
-
-        if (objectif.from && objectif.to) {
-          const currentAmount = sumBy(
-            incomes.filter(
-              (item) =>
-                objectif.categories.includes(item.category) &&
-                objectif.from <= item.date &&
-                objectif.to >= item.date,
-            ),
-            'value',
-          );
-          return {
-            ...objectif,
-            currentAmount,
-            progress: (currentAmount / objectif.targetAmount) * 100,
-          };
-        }
-        const currentAmount = sumBy(
-          incomes.filter((item) => objectif.categories.includes(item.category)),
-          'value',
-        );
-        return {
-          ...objectif,
-          currentAmount,
-          progress: (currentAmount / objectif.targetAmount) * 100,
-        };
-      }
-
-      return { ...objectif, currentAmount: 0, progress: 0 };
-    });
-
-    return newObj;
+    return {
+      objectifs,
+      summary: {
+        completed: completed.length,
+        opened: opened.length,
+        total: objectifs.length,
+        progress: sumBy(objectifs, 'progress') / (objectifs.length || 1),
+      },
+    };
   }
 
   findOne(id: number) {

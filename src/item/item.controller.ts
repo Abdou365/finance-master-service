@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { Item } from '@prisma/client';
 import { ItemService } from './item.service';
 
@@ -24,8 +31,14 @@ export class ItemController {
   findAll() {
     return this.itemService.findAll();
   }
-  @Get('/:accountId')
-  findByAccount(@Param() params: { accountId: string }) {
-    return this.itemService.findAllByAccount({ accountId: params.accountId });
+  @Get('/all/:accountId')
+  findByAccount(@Param('accountId', ParseUUIDPipe) accountId: string) {
+    return this.itemService.findAllByAccount({ accountId });
+  }
+  @Get('/category/:accountId')
+  async findItemsCategory(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+  ) {
+    return await this.itemService.findAllItemCategory(accountId);
   }
 }

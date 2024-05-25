@@ -109,75 +109,109 @@ const TITLE_CATEGORY_MAP = {
   'Revenus de vente de produits pour débutants': 'Income',
 };
 
-const EXPENSE_TITLES = Object.keys(TITLE_CATEGORY_MAP).filter(
-  (title) => TITLE_CATEGORY_MAP[title] !== 'Income',
-);
-
-const INCOME_TITLES = Object.keys(TITLE_CATEGORY_MAP).filter(
-  (title) => TITLE_CATEGORY_MAP[title] === 'Income',
-);
-
-const createItemsList = (titles, isExpense) => {
-  return titles.map((title) => ({
-    title,
-    description: faker.lorem.paragraph(20),
-    isExpense,
-    category: TITLE_CATEGORY_MAP[title] || 'Other',
-  }));
-};
-
-const EXPENSE_ITEMS = createItemsList(EXPENSE_TITLES, true);
-const INCOME_ITEMS = createItemsList(INCOME_TITLES, false);
-
-const ALL_ITEMS = [...EXPENSE_ITEMS, ...INCOME_ITEMS];
-
 const userIds = ['373254dc-876a-469a-86e3-57eabeae1f3e'];
 
 const randomDate = (start, end) => {
-  return new Date(
+  const date = new Date(
     start.getTime() + Math.random() * (end.getTime() - start.getTime()),
+  );
+  return date.toISOString();
+};
+
+const randomFutureDate = (start) => {
+  const today = new Date(start);
+  const futureDate = new Date(
+    today.setMonth(today.getMonth() + faker.number.int({ min: 1, max: 12 })),
+  );
+  return futureDate.toISOString();
+};
+
+const createAccounts = (userIds) => {
+  const numAccounts = faker.number.int({ min: 5, max: 15 });
+  return Array.from({ length: numAccounts }, () => ({
+    id: faker.string.uuid(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    title: faker.finance.accountName(),
+    description: faker.lorem.paragraph(),
+    userId: faker.helpers.arrayElement(userIds),
+    status: faker.helpers.arrayElement(['published', 'archived', 'deleted']),
+  }));
+};
+
+const createItems = (accountIds) => {
+  const numItems = faker.number.int({ min: 150, max: 1500 });
+  return accountIds.flatMap((accountId) =>
+    Array.from({ length: numItems }, () => {
+      const id = faker.string.uuid();
+      const title = faker.helpers.arrayElement(Object.keys(TITLE_CATEGORY_MAP));
+      return {
+        id: id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        title: title,
+        description: faker.lorem.sentences(2),
+        value: faker.number.float({ min: 10, max: 10000, fractionDigits: 2 }),
+        category: TITLE_CATEGORY_MAP[title],
+        isExpense: TITLE_CATEGORY_MAP[title] !== 'Income',
+        date: randomDate(new Date('2022-01-01'), new Date('2024-12-31')),
+        accountId,
+        userId: faker.helpers.arrayElement(userIds),
+        status: faker.helpers.arrayElement([
+          'published',
+          'archived',
+          'deleted',
+        ]),
+      };
+    }),
   );
 };
 
-const generateItems = (nb, accountIds) => {
-  const items = [];
-  for (let i = 0; i < nb; i++) {
-    const randomItem =
-      ALL_ITEMS[faker.number.int({ min: 0, max: ALL_ITEMS.length - 1 })];
-    const value = parseFloat(faker.finance.amount({ min: 1, max: 1000 }));
-    const date = randomDate(new Date('2022-01-01'), new Date('2024-05-13'));
-    const userId =
-      userIds[faker.number.int({ min: 0, max: userIds.length - 1 })];
-    const accountId =
-      accountIds[faker.number.int({ min: 0, max: accountIds.length - 1 })];
-
-    const item = {
+const createObjectives = (accountIds) => {
+  return accountIds.flatMap((accountId) =>
+    Array.from({ length: faker.number.int({ min: 1, max: 20 }) }, () => ({
       id: faker.string.uuid(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      title: randomItem.title,
-      description: randomItem.description,
-      value: value,
-      category: randomItem.category,
-      isExpense: randomItem.isExpense,
-      date,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      title: faker.finance.transactionType(),
+      description: faker.lorem.sentences(1),
+      from: new Date().toISOString(),
+      to: randomFutureDate(new Date()),
+      deadline: randomFutureDate(new Date()),
+      userId: faker.helpers.arrayElement(userIds),
+      targetAmount: faker.number.float({
+        min: 10,
+        max: 50000,
+        fractionDigits: 2,
+      }),
+      categories: faker.helpers.shuffle(CATEGORIES).slice(0, 3),
+      recurrence: faker.helpers.arrayElement(['day', 'week', 'month', 'year']),
+      customRecurrence: null,
+      isCompleted: faker.datatype.boolean(),
+      type: faker.helpers.arrayElement(['savings', 'budget', 'income']),
+      status: faker.helpers.arrayElement([
+        'active',
+        'completed',
+        'archived',
+        'deleted',
+      ]),
       accountId,
-      userId,
-      status: 'published',
-    };
-
-    items.push(item);
-  }
-  return items;
+    })),
+  );
 };
 
 const initiateDb = async () => {
   try {
-    const accounts = await db.account.findMany();
+    const accounts = createAccounts(userIds);
+    await db.account.createMany({ data: accounts });
     const accountIds = accounts.map((a) => a.id);
-    const generatedItems = generateItems(2000, accountIds);
 
-    await db.item.createMany({ data: generatedItems });
+    const items = createItems(accountIds);
+    await db.item.createMany({ data: items });
+
+    const objectives = createObjectives(accountIds);
+    await db.objectif.createMany({ data: objectives });
+
     console.log('Database populated successfully');
   } catch (error) {
     console.error('Error populating the database:', error);

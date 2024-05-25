@@ -6,16 +6,20 @@ import {
   Param,
   Patch,
   Post,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Objectif } from '@prisma/client';
 import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
 import { ObjectifService } from './objectif.service';
+import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
+import { SUCCESSCREATE, SUCCESSFETCH } from 'src/interceptor/response.messages';
 
 @Controller('objectif')
 export class ObjectifController {
   constructor(private readonly objcetifService: ObjectifService) {}
 
   @Post()
+  @UseInterceptors(new ResponseInterceptor(SUCCESSCREATE))
   create(
     @Body()
     createObjcetifDto: Objectif,
@@ -28,6 +32,7 @@ export class ObjectifController {
   }
 
   @Get('all/:userId/:accountId')
+  @UseInterceptors(new ResponseInterceptor(SUCCESSFETCH))
   async findAll(
     @Param('userId') userId: string,
     @Param('accountId') accountId: string,
@@ -35,6 +40,7 @@ export class ObjectifController {
     return await this.objcetifService.findAll({
       userId,
       accountId,
+      status: 'active' || 'completed',
     });
   }
 

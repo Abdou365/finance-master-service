@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Item, Prisma, PrismaClient } from '@prisma/client';
-import { groupBy, partition, sumBy } from 'lodash';
+import { groupBy, partition, sum, sumBy } from 'lodash';
+import { ObjectifService } from 'src/objectif/objectif.service';
+import { computeObjectif } from 'src/objectif/objectif.utils';
 
 @Injectable()
 export class AccountService {
-  constructor() {}
-
   db = new PrismaClient();
   account = this.db.account;
   item = this.db.item;
@@ -46,11 +46,17 @@ GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."
         Item: {
           select: {
             id: true,
+            title: true,
             date: true,
             value: true,
             isExpense: true,
             category: true,
           },
+          where: { status: 'published' },
+          orderBy: { date: 'asc' },
+        },
+        Objectif: {
+          where: { status: 'active' || 'completed' },
         },
       },
     });
@@ -77,10 +83,23 @@ GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."
       };
     };
 
+    const objectifs = computeObjectif(res.Objectif, res.Item);
+    const [completed, opened] = partition(
+      objectifs,
+      (objectif) => objectif.progress === 100,
+    );
+
     return {
       ...res,
       expenseRepartition: repartition(res.Item),
       summarize: summarize(res.Item),
+      Item: res.Item.slice(0, 5),
+      Objectif: {
+        completed: completed.length,
+        opened: opened.length,
+        total: objectifs.length,
+        progress: sumBy(objectifs, 'progress') / (objectifs.length || 1),
+      },
     };
   };
 
