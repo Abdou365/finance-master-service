@@ -4,120 +4,98 @@ import { groupBy, partition, sumBy } from 'lodash';
 function calculateProgress(
   currentAmount: number,
   targetAmount: number,
+  type?: string,
 ): number {
-  let progress = (currentAmount / targetAmount) * 100;
+  // let progress = (currentAmount / targetAmount) * 100;
+  // return progress > 100 ? 100 : progress;
+
+  const progress = (currentAmount / targetAmount) * 100;
   return progress > 100 ? 100 : progress;
 }
+
+function getTimeAgo(interval: number, unit: string): number {
+  const multiplier = {
+    day: 1000 * 60 * 60 * 24,
+    week: 1000 * 60 * 60 * 24 * 7,
+    month: 1000 * 60 * 60 * 24 * 30,
+    year: 1000 * 60 * 60 * 24 * 365,
+  }[unit];
+  return new Date().valueOf() - multiplier * interval;
+}
+
+function filterItemsByDate(
+  items: Partial<Item>[],
+  from: Date,
+  to: Date,
+): Partial<Item>[] {
+  return items.filter(
+    (item) => new Date(item.date) >= from && new Date(item?.date) <= to,
+  );
+}
+
+function calculateCurrentAmount(
+  items: Partial<Item>[],
+  categories: string[],
+  from?: Date,
+  to?: Date,
+): number {
+  const groupedItems = groupBy(items, 'category');
+  const filteredItems =
+    categories.length === 0
+      ? items
+      : categories.map((category) => groupedItems[category]).flat();
+  return sumBy(
+    filteredItems.filter(
+      (item) => !from || !to || (item?.date >= from && item?.date <= to),
+    ),
+    'value',
+  );
+}
+
 export const computeObjectif = (
   objectifs: Objectif[],
   items: Partial<Item>[],
 ) =>
   objectifs.map((objectif) => {
+    const {
+      recurrence,
+      recurrenceInterval = 1,
+      type,
+      categories,
+      from,
+      to,
+      targetAmount,
+      isRecurrent,
+    } = objectif;
+
     const [expense, incomes] = partition(items, (item) => item.isExpense);
+    const relevantItems = type === 'savings' ? expense : incomes;
 
-    const expenseByCategory = groupBy(expense, 'category');
+    let currentAmount = 0;
 
-    if (objectif.type === 'savings') {
-      if (objectif.categories.length === 0) {
-        if (objectif.from && objectif.to) {
-          const currentAmount = sumBy(
-            expense.filter(
-              (item) => objectif.from <= item.date && objectif.to >= item.date,
-            ),
-            'value',
-          );
-          return {
-            ...objectif,
-            currentAmount,
-            progress: calculateProgress(currentAmount, objectif.targetAmount),
-          };
-        }
-        const currentAmount = sumBy(expense, 'value');
-        return {
-          ...objectif,
-          currentAmount,
-          progress: calculateProgress(currentAmount, objectif.targetAmount),
-        };
-      }
-
-      if (objectif.from && objectif.to) {
-        const currentAmount = sumBy(
-          objectif.categories
-            .map((category) => expenseByCategory[category])
-            .flat()
-            .filter(
-              (item) =>
-                objectif.from <= item?.date && objectif.to >= item?.date,
-            ),
-          'value',
-        );
-        return {
-          ...objectif,
-          currentAmount,
-          progress: calculateProgress(currentAmount, objectif.targetAmount),
-        };
-      }
-      const currentAmount = sumBy(
-        objectif.categories
-          .map((category) => expenseByCategory[category])
-          .flat(),
-        'value',
+    if (isRecurrent && recurrence && recurrenceInterval > 0) {
+      const interval = recurrenceInterval - 1;
+      const timeAgo = getTimeAgo(interval, recurrence);
+      currentAmount = calculateCurrentAmount(
+        relevantItems,
+        categories,
+        new Date(timeAgo),
+        new Date(),
       );
-      return {
-        ...objectif,
-        currentAmount,
-        progress: calculateProgress(currentAmount, objectif.targetAmount),
-      };
-    }
-    if (objectif.type === 'income') {
-      if (objectif.categories.length === 0) {
-        if (objectif.from && objectif.to) {
-          const currentAmount = sumBy(
-            incomes.filter(
-              (item) => objectif.from <= item.date && objectif.to >= item.date,
-            ),
-            'value',
-          );
-          return {
-            ...objectif,
-            currentAmount,
-            progress: calculateProgress(currentAmount, objectif.targetAmount),
-          };
-        }
-        const currentAmount = sumBy(incomes, 'value');
-        return {
-          ...objectif,
-          currentAmount,
-          progress: calculateProgress(currentAmount, objectif.targetAmount),
-        };
-      }
-
-      if (objectif.from && objectif.to) {
-        const currentAmount = sumBy(
-          incomes.filter(
-            (item) =>
-              objectif.categories.includes(item.category) &&
-              objectif.from <= item.date &&
-              objectif.to >= item.date,
-          ),
-          'value',
-        );
-        return {
-          ...objectif,
-          currentAmount,
-          progress: calculateProgress(currentAmount, objectif.targetAmount),
-        };
-      }
-      const currentAmount = sumBy(
-        incomes.filter((item) => objectif.categories.includes(item.category)),
-        'value',
+    } else if (from && to) {
+      currentAmount = calculateCurrentAmount(
+        relevantItems,
+        categories,
+        from,
+        to,
       );
-      return {
-        ...objectif,
-        currentAmount,
-        progress: calculateProgress(currentAmount, objectif.targetAmount),
-      };
+    } else {
+      currentAmount = calculateCurrentAmount(relevantItems, categories);
     }
 
-    return { ...objectif, currentAmount: 0, progress: 0 };
+    return {
+      ...objectif,
+      currentAmount,
+      progress: calculateProgress(currentAmount, targetAmount, type),
+    };
   });

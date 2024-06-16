@@ -9,17 +9,20 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Objectif } from '@prisma/client';
+import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
+import {
+  MESSAGE_SUCCESSCREATE,
+  MESSAGE_SUCCESSFETCH,
+} from 'src/interceptor/response.messages';
 import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
 import { ObjectifService } from './objectif.service';
-import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
-import { SUCCESSCREATE, SUCCESSFETCH } from 'src/interceptor/response.messages';
 
 @Controller('objectif')
 export class ObjectifController {
   constructor(private readonly objcetifService: ObjectifService) {}
 
   @Post()
-  @UseInterceptors(new ResponseInterceptor(SUCCESSCREATE))
+  @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSCREATE))
   create(
     @Body()
     createObjcetifDto: Objectif,
@@ -32,8 +35,21 @@ export class ObjectifController {
   }
 
   @Get('all/:userId/:accountId')
-  @UseInterceptors(new ResponseInterceptor(SUCCESSFETCH))
+  @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSFETCH))
   async findAll(
+    @Param('userId') userId: string,
+    @Param('accountId') accountId: string,
+  ) {
+    return await this.objcetifService.findAll({
+      userId,
+      accountId,
+      status: 'active' || 'completed',
+    });
+  }
+
+  @Post('delete/:userId/:accountId')
+  @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSFETCH))
+  async bulkDelete(
     @Param('userId') userId: string,
     @Param('accountId') accountId: string,
   ) {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { groupBy, partition, sumBy } from 'lodash';
+import { partition } from 'lodash';
 import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
 import { computeObjectif } from './objectif.utils';
 
@@ -47,7 +47,7 @@ export class ObjectifService {
         completed: completed.length,
         opened: opened.length,
         total: objectifs.length,
-        progress: sumBy(objectifs, 'progress') / (objectifs.length || 1),
+        progress: (completed.length / objectifs.length) * 100,
       },
     };
   }

@@ -13,6 +13,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Authentication {
+  id                String    @id() @default(uuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  refreshToken      String?
+  refreshExpiresAt  DateTime?
+  recoveryToken     String?
+  recoveryExpiresAt DateTime?
+  confirmToken      String?
+  confirmExpiresAt  DateTime?
+  confirmCode       Int?
+  recoveryCode      Int?
+  emailUpdatedAt    DateTime?
+  provider          Provider  @default(email)
+  loginType         LoginType @default(password)
+  lastLogin         DateTime?
+  passwordChangedAt DateTime?
+  password          String?
+  userId            String?   @unique
+  User              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// model Session {
+//   id        String   @id() @default(uuid())
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   expiresAt DateTime
+//   refreshToken String
+//   refreshExpiresAt DateTime
+//   userId    String?
+//   User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+// }
+
+enum Provider {
+  email
+}
+
+enum LoginType {
+  password
+  // google
+  // facebook
+}
+
+enum Role {
+  user
+  admin
+}
+
+model User {
+  id             String          @id() @default(uuid())
+  createdAt      DateTime        @default(now())
+  confirmed      Boolean         @default(false)
+  confirmedAt    DateTime?
+  email          String          @unique
+  role           Role            @default(user)
+  name           String?
+  Account        Account[]
+  Item           Item[]
+  Objectif       Objectif[]
+  Authentication Authentication?
+}
+
 model Account {
   id          String     @id() @default(uuid())
   createdAt   DateTime   @default(now())
@@ -20,6 +82,7 @@ model Account {
   title       String?    @default("")
   description String?
   userId      String?
+  User        User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   Item        Item[]
   Objectif    Objectif[]
   status      ItemStatus @default(published)
@@ -50,34 +113,36 @@ model Item {
   date        DateTime
   accountId   String
   userId      String?
+  User        User?      @relation(fields: [userId], references: [id])
   status      ItemStatus @default(published)
-  account     Account    @relation(fields: [accountId], references: [id])
+  Account     Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
 }
 
 model Objectif {
-  id               String         @id() @default(uuid())
-  accountId        String
-  userId           String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now())
-  title            String?        @default("")
-  description      String?
-  from             DateTime?
-  to               DateTime?
-  deadline         DateTime?
-  targetAmount     Float
-  categories       String[]
-  recurrence       Recurrence?
-  customRecurrence Json?
-  isCompleted      Boolean        @default(false)
-  type             ObjectifType   @default(savings)
-  account          Account        @relation(fields: [accountId], references: [id])
-  status           ObjectifStatus @default(active)
+  id                 String         @id() @default(uuid())
+  accountId          String
+  userId             String?
+  User               User?          @relation(fields: [userId], references: [id])
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now())
+  title              String?        @default("")
+  description        String?
+  from               DateTime?
+  to                 DateTime?
+  deadline           DateTime?
+  targetAmount       Float
+  categories         String[]
+  isRecurrent        Boolean        @default(false)
+  recurrence         Recurrence?
+  recurrenceInterval Int?           @default(1)
+  isCompleted        Boolean        @default(false)
+  type               ObjectifType   @default(savings)
+  Account            Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  status             ObjectifStatus @default(active)
 }
 
 enum ObjectifType {
   savings
-  budget
   income
 }
 

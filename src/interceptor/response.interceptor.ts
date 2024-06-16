@@ -8,7 +8,7 @@ import { map } from 'rxjs';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
-  constructor(public message: string) {} // Add a public message property
+  constructor(public message: string) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const statusCode = context.switchToHttp().getResponse().statusCode;
