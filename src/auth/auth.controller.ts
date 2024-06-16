@@ -49,8 +49,6 @@ export class AuthController {
     @Body() body: { token: string; code: number },
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log(body);
-
     const newUser = await this.authService.confirmRegistration(
       body.token,
       body.code,
@@ -78,14 +76,10 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    console.log(req.user);
-
     const jwt = await this.authService.login(
       req.body.username, // email
       req.body.password,
     );
-
-    console.log(jwt);
   }
 
   // recover password
@@ -104,7 +98,6 @@ export class AuthController {
     body: recoveryPasswordDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log(body);
     if (body.password !== body.password_confirmation) {
       throw new NotAcceptableException('Password mismatch');
     }

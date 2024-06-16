@@ -1,8 +1,17 @@
-export const jwtSecrets = {
-  access_token: 'access-token-secret',
-  refresh_token: 'refresh-token-secret',
-  confirm_token: 'confirm',
-  recovery_token: 'recovery',
+import { readFileSync } from 'fs';
+
+export const jwtSecretsPublic = {
+  access_token: readFileSync('./keys/accessKey.pub', 'utf8'),
+  refresh_token: readFileSync('./keys/refreshKey.pub', 'utf8'),
+  confirm_token: readFileSync('./keys/confirmKey.pub', 'utf8'),
+  recovery_token: readFileSync('./keys/recoveryKey.pub', 'utf8'),
+};
+
+export const jwtSecretsPrivate = {
+  access_token: readFileSync('./keys/accessKey.pem', 'utf8'),
+  refresh_token: readFileSync('./keys/refreshKey.pem', 'utf8'),
+  confirm_token: readFileSync('./keys/confirmKey.pem', 'utf8'),
+  recovery_token: readFileSync('./keys/recoveryKey.pem', 'utf8'),
 };
 
 export const jwtExpiresIn = {

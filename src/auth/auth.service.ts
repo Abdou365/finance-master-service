@@ -1,7 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, User } from '@prisma/client';
-import { computeExpiresIn, jwtExpiresIn, jwtSecrets } from './constants';
+import {
+  computeExpiresIn,
+  jwtExpiresIn,
+  jwtSecretsPrivate,
+  jwtSecretsPublic,
+} from './constants';
 import { omit } from 'lodash';
 import { Encryption } from './encryption.service';
 import { NotificationService } from 'src/notification/notification.service';
@@ -138,7 +143,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials,  no user found');
     }
     try {
-      if (this.jwtService.verify(token, { secret: jwtSecrets.confirm_token })) {
+      if (
+        this.jwtService.verify(token, {
+          secret: jwtSecretsPublic.confirm_token,
+        })
+      ) {
         const auth = await this.prisma.authentication.update({
           where: {
             id: newUser.Authentication.id,
@@ -202,7 +211,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     try {
-      if (this.jwtService.verify(token, { secret: jwtSecrets.confirm_token })) {
+      if (
+        this.jwtService.verify(token, {
+          secret: jwtSecretsPublic.confirm_token,
+        })
+      ) {
         const user = await this.prisma.user.findUnique({
           where: {
             id: auth.userId,
@@ -324,7 +337,8 @@ export class AuthService {
    */
   generateRefreshToken(payload: { email: string; sub: string }): string {
     return this.jwtService.sign(payload, {
-      secret: jwtSecrets.refresh_token,
+      secret: jwtSecretsPrivate.refresh_token,
+      algorithm: 'RS256',
       expiresIn: jwtExpiresIn.refresh_token,
     });
   }
@@ -336,7 +350,8 @@ export class AuthService {
    */
   generateConfirmToken(payload: { email: string; sub: string }) {
     return this.jwtService.sign(payload, {
-      secret: jwtSecrets.confirm_token,
+      secret: jwtSecretsPrivate.confirm_token,
+      algorithm: 'RS256',
       expiresIn: jwtExpiresIn.confirm_token,
     });
   }
@@ -348,7 +363,8 @@ export class AuthService {
    */
   generateAccessToken(payload: { email: string; sub: string }) {
     return this.jwtService.sign(payload, {
-      secret: jwtSecrets.access_token,
+      secret: jwtSecretsPrivate.access_token,
+      algorithm: 'RS256',
       expiresIn: jwtExpiresIn.acces_token,
     });
   }
@@ -360,7 +376,8 @@ export class AuthService {
    */
   generateRecoveryToken(payload: { email: string; sub: string }) {
     return this.jwtService.sign(payload, {
-      secret: jwtSecrets.recovery_token,
+      secret: jwtSecretsPrivate.recovery_token,
+      algorithm: 'RS256',
       expiresIn: jwtExpiresIn.recovery_token,
     });
   }
@@ -451,7 +468,9 @@ export class AuthService {
     }
     try {
       if (
-        this.jwtService.verify(token, { secret: jwtSecrets.recovery_token })
+        this.jwtService.verify(token, {
+          secret: jwtSecretsPublic.recovery_token,
+        })
       ) {
         const user = await this.prisma.user.update({
           where: {
@@ -586,7 +605,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     try {
-      if (this.jwtService.verify(token, { secret: jwtSecrets.confirm_token })) {
+      if (
+        this.jwtService.verify(token, {
+          secret: jwtSecretsPublic.confirm_token,
+        })
+      ) {
         const { email } = this.jwtService.decode(token) as { email: string };
         const user = await this.prisma.user.update({
           where: {

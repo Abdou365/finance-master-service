@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { IS_PUBLIC_KEY } from './public';
-import { jwtSecrets } from './constants';
+import { jwtSecretsPublic } from './constants';
 import { isAfter } from 'date-fns';
 import { setCookies } from '../utils/cookie.utils';
 
@@ -56,7 +56,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       // Verify the access token.
 
       await this.jwt.verifyAsync(access_token, {
-        secret: jwtSecrets.access_token,
+        secret: jwtSecretsPublic.access_token,
       });
       return true;
     } catch (error) {
@@ -87,7 +87,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             const payload = await this.jwt.verifyAsync(
               auth.Authentication.refreshToken,
               {
-                secret: jwtSecrets.refresh_token,
+                secret: jwtSecretsPublic.refresh_token,
               },
             );
 
