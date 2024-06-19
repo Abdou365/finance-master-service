@@ -13,6 +13,8 @@ import { ItemModule } from './item/item.module';
 import { ObjectifModule } from './objectif/objectif.module';
 import { NotificationModule } from './notification/notification.module';
 
+console.log(process.env.NODE_ENV);
+
 @Module({
   imports: [
     AccountModule,
@@ -22,7 +24,7 @@ import { NotificationModule } from './notification/notification.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-      envFilePath: ['.env'],
+      envFilePath: [`.env.${process.env.NODE_ENV}`],
       expandVariables: true,
     }),
     MailerModule.forRootAsync({
