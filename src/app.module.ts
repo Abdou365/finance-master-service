@@ -10,8 +10,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ItemModule } from './item/item.module';
-import { ObjectifModule } from './objectif/objectif.module';
 import { NotificationModule } from './notification/notification.module';
+import { ObjectifModule } from './objectif/objectif.module';
 
 console.log(process.env.NODE_ENV);
 
@@ -31,6 +31,7 @@ console.log(process.env.NODE_ENV);
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (ConfigService: ConfigService) => {
+    
         return {
           defaults: {
             from: `"No Reply" <${ConfigService.get('mail.user')}>`,

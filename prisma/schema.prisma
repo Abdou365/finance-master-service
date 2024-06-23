@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -80,8 +80,8 @@ model Account {
   id          String     @id() @default(uuid())
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  title       String?    @default("")
-  description String?
+  title       String?    @default("") @db.VarChar(255)
+  description String?    @db.Text
   userId      String?
   User        User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   Item        Item[]
@@ -106,8 +106,8 @@ model Item {
   id          String     @id() @default(uuid())
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  title       String?    @default("")
-  description String?
+  title       String?    @default("") @db.VarChar(255)
+  description String?    @db.Text
   value       Float
   category    String?
   isExpense   Boolean?   @default(true)
@@ -126,8 +126,8 @@ model Objectif {
   User               User?          @relation(fields: [userId], references: [id])
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @default(now())
-  title              String?        @default("")
-  description        String?
+  title              String?        @default("") @db.VarChar(255)
+  description        String?        @db.Text
   from               DateTime?
   to                 DateTime?
   deadline           DateTime?

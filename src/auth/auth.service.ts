@@ -1,18 +1,18 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, User } from '@prisma/client';
+import { omit } from 'lodash';
+import { NotificationService } from 'src/notification/notification.service';
+import { generateNumber } from 'src/utils/code.utils';
+import { generateUUID } from 'src/utils/uuid.utils';
 import {
   computeExpiresIn,
   jwtExpiresIn,
   jwtSecretsPrivate,
   jwtSecretsPublic,
 } from './constants';
-import { omit } from 'lodash';
 import { Encryption } from './encryption.service';
-import { NotificationService } from 'src/notification/notification.service';
-import { ConfigService } from '@nestjs/config';
-import { generateNumber } from 'src/utils/code.utils';
-import { generateUUID } from 'src/utils/uuid.utils';
 
 @Injectable()
 export class AuthService {
@@ -69,6 +69,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials, no user created');
     }
+
 
     this.notification.sendEmail(
       email,
