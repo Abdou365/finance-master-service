@@ -7,44 +7,43 @@ import {
   ParseUUIDPipe,
   Post,
   Req,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
-import { Item } from '@prisma/client';
 import { Request } from 'express';
-import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
-import { MESSAGE_SUCCESSFETCH } from 'src/interceptor/response.messages';
+import { CreateItemDto } from './dto/create-item.dto';
 import { ItemService } from './item.service';
+import { ResponseInterceptor } from '../interceptor/response.interceptor';
+import { MESSAGE_SUCCESSFETCH } from '../interceptor/response.messages';
 
 @Controller('item')
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   @Post()
-  upsert(@Body() datas: { items: Item[]; count: number }, @Req() req: Request) {
+  async upsert(@Body() body: CreateItemDto, @Req() req: Request) {
     if (
       (req.signedCookies['user'].role !== 'admin' ||
         req.signedCookies['user'].role !== 'premium') &&
-      datas.count > 100
+      body.count > 100
     ) {
       throw new BadRequestException(
         'You have reached the limit of items you can upload',
       );
     }
 
-    const update = datas.items.map(
-      async (data) =>
+    const update =  body.items.map(
+      async (data : any) =>
         await this.itemService.upsert({
           where: { id: data.id },
           create: data,
           update: data,
         }),
-    );
+    );    
 
-    return update;
   }
 
   @Get()
-  findAll() {
+ async findAll() {
     return this.itemService.findAll();
   }
 

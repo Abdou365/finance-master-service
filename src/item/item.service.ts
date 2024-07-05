@@ -13,7 +13,7 @@ export class ItemService {
   }
 
   findAll = async () => {
-    return this.item.findMany();
+    return await this.item.findMany();
   };
 
   findAllByAccount = async (args: Prisma.ItemFindManyArgs) => {

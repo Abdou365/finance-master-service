@@ -5,25 +5,29 @@ services:
     image: postgres # Replace with the latest version available
     container_name: postgresql-container
     environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - '6500:5432'
+      - ${POSTGRES_PORT}:5432
+    env_file:
+      - .env.test
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin-container
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - '5050:80'
     depends_on:
       - postgres
     restart: always
+    env_file:
+      - .env.test
 
 volumes:
   postgres-data:
