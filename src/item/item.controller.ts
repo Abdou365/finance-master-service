@@ -53,12 +53,11 @@ export class ItemController {
     @Param('accountId', ParseUUIDPipe) accountId: string,
     @Req() req: Request,
   ) {
-    const { page, limit = 0 } = req.query;
+    const { page} = req.query;
 
     return this.itemService.findAllByAccount({
       where: { accountId, status: 'published' },
       skip: +page || 0,
-      // take: +limit || 0,
       orderBy: { createdAt: 'desc' },
     });
   }
