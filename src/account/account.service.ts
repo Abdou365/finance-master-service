@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { partition, sumBy, uniq, groupBy, sortBy, orderBy } from 'lodash';
+import { log } from 'console';
+import { groupBy, orderBy, partition, sumBy, uniq } from 'lodash';
 import { computeObjectif } from 'src/objectif/objectif.utils';
 
 @Injectable()
@@ -32,6 +33,7 @@ LEFT JOIN public."Item" ON "Account"."id" = "Item"."accountId" AND "Item"."statu
 GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."userId";
         `;
 
+log(data);
     return data;
   };
 
@@ -56,27 +58,28 @@ GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."
    */
   findCurrentAll = async (id: string) => {
     // Execute a raw SQL query to retrieve account information for the given user ID.
-    const data = await this.db.$queryRawUnsafe(`
-    SELECT 
-        "Account"."id",
-        "Account"."title",  -- Include the account name
-        "Account"."description",  -- Include the account email
-        "Account"."userId",  -- Include the account email
-        COUNT("Item"."id")::int AS "itemCount",  -- Count only items that joined successfully
-        COUNT(CASE WHEN "isExpense" = true THEN 1 ELSE NULL END)::int AS "expenseCount",
-        COUNT(CASE WHEN "isExpense" = false THEN 1 ELSE NULL END)::int AS "paymentCount",
-        COALESCE(SUM(CASE WHEN "isExpense" = true THEN "value" ELSE 0 END), 0)::int AS "expenseSum",
-        COALESCE(SUM(CASE WHEN "isExpense" = false THEN "value" ELSE 0 END), 0)::int AS "paymentSum",
-        (COALESCE(SUM(CASE WHEN "isExpense" = false THEN "value" ELSE 0 END), 0) - 
-         COALESCE(SUM(CASE WHEN "isExpense" = true THEN "value" ELSE 0 END), 0))::int AS "balance"
-    FROM public."Account"
-    LEFT JOIN public."Item" ON "Account"."id" = "Item"."accountId" AND "Item"."status" = 'published' 
-	WHERE "Account"."userId" = '${id}'
-    GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."userId";
-            `);
+// Execute a raw SQL query to retrieve account information for the given user ID using Prisma's $queryRaw as a tagged template function.
+const data = await this.db.$queryRaw`
+SELECT 
+    "Account"."id",
+    "Account"."title",  -- Include the account name
+    "Account"."description",  -- Include the account email
+    "Account"."userId",  -- Include the account email
+    COUNT("Item"."id")::int AS "itemCount",  -- Count only items that joined successfully
+    COUNT(CASE WHEN "isExpense" = true THEN 1 ELSE NULL END)::int AS "expenseCount",
+    COUNT(CASE WHEN "isExpense" = false THEN 1 ELSE NULL END)::int AS "paymentCount",
+    COALESCE(SUM(CASE WHEN "isExpense" = true THEN "value" ELSE 0 END), 0)::int AS "expenseSum",
+    COALESCE(SUM(CASE WHEN "isExpense" = false THEN "value" ELSE 0 END), 0)::int AS "paymentSum",
+    (COALESCE(SUM(CASE WHEN "isExpense" = false THEN "value" ELSE 0 END), 0) - 
+     COALESCE(SUM(CASE WHEN "isExpense" = true THEN "value" ELSE 0 END), 0))::int AS "balance"
+FROM public."Account"
+LEFT JOIN public."Item" ON "Account"."id" = "Item"."accountId" AND "Item"."status" = 'published' 
+WHERE "Account"."userId" = ${id}
+GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."userId";
+`;
 
-    return data;
-  };
+return data;  
+};
 
   findOneById = async (id: string) => {
     const res = await this.account.findUnique({

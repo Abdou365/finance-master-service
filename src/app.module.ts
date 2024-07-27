@@ -10,8 +10,10 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ItemModule } from './item/item.module';
-import { ObjectifModule } from './objectif/objectif.module';
 import { NotificationModule } from './notification/notification.module';
+import { ObjectifModule } from './objectif/objectif.module';
+
+console.log(process.env.NODE_ENV);
 
 @Module({
   imports: [
@@ -22,13 +24,14 @@ import { NotificationModule } from './notification/notification.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-      envFilePath: ['.env'],
+      envFilePath: [`.env.${process.env.NODE_ENV}`],
       expandVariables: true,
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (ConfigService: ConfigService) => {
+    
         return {
           defaults: {
             from: `"No Reply" <${ConfigService.get('mail.user')}>`,

@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: { origin: true, credentials: true },
   });
-  app.use(cookieParser('secretKey'));
+  app.use(cookieParser(process.env.COOKIE_SECRET));
   await app.listen(3000);
 }
 bootstrap();

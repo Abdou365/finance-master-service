@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   NotAcceptableException,
   Param,
@@ -10,7 +9,7 @@ import {
   Req,
   Res,
   UseGuards,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
@@ -20,12 +19,11 @@ import {
   MESSAGE_SUSSUCCESS_LOGOUT,
   MESSAGE_SUSSUCCESS_REGISTER,
 } from 'src/interceptor/response.messages';
+import { removeCookies, setCookies } from '../utils/cookie.utils';
 import { AuthService } from './auth.service';
+import { recoveryPasswordDto } from './dto/recovery-account.dto';
 import { LocalAuthGuard } from './local-auth.guard';
 import { Public } from './public';
-import { setCookies } from '../utils/cookie.utils';
-import { removeCookies } from '../utils/cookie.utils';
-import { recoveryPasswordDto } from './dto/recovery-account.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -80,6 +78,7 @@ export class AuthController {
       req.body.username, // email
       req.body.password,
     );
+
   }
 
   // recover password
