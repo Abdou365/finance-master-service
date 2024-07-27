@@ -17,6 +17,7 @@
     "dev:prod": "export NODE_ENV=production && npm run gen-key && npm run prod:prisma-generate && nest start --watch",
     "prod:prisma-generate": "npx dotenv -e .env.production -- npx prisma generate",
     "prod:prisma-push": "npx dotenv -e .env.production -- npx prisma db push",
+    "studio:prod": "npx dotenv -e .env.production -- npx prisma studio",
     "generateKeys": "node keys/generateKeys.ts",
     "seed:dev": "node prisma/seeder.js",
     "start:debug": "nest start --debug --watch",
