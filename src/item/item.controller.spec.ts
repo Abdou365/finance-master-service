@@ -1,4 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
+import { ItemService } from './item.service';
+import { ItemController } from './item.controller';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockConfigService, MockMailerService } from '../test/mock';
@@ -6,8 +8,6 @@ import setupEnvironment from "../test/setup";
 import injectData, { injectItems, truncareDb } from '../test/syncDB';
 import { wait } from '../test/test.utils';
 import { CreateItemDto } from './dto/create-item.dto';
-import { ItemController } from './item.controller';
-import { ItemService } from './item.service';
 
 let accountId;
 let userId ;
