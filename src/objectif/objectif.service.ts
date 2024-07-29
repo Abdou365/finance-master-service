@@ -9,7 +9,7 @@ export class ObjectifService {
   private objeectif = new PrismaClient().objectif;
   private db = new PrismaClient();
 
-  async create(upsertData: Prisma.ObjectifUpsertArgs) {
+  async upsert(upsertData: Prisma.ObjectifUpsertArgs) {
     const res = await this.objeectif.upsert(upsertData);
     return res;
   }
@@ -36,31 +36,48 @@ export class ObjectifService {
     });
 
     const objectifs = computeObjectif(rawObjectifs, items);
-    const [completed, opened] = partition(
+
+    const [savings, incomes] = partition(
       objectifs,
-      (objectif) => objectif.progress === 100,
+      objectif => objectif.type === 'savings'
+    );
+
+    const [savingsCompleted, savingsOpened] = partition(
+      savings,
+      objectif => objectif.progress === 100
+    );
+
+    const [incomesCompleted, incomesOpened] = partition(
+      incomes,
+      objectif => objectif.progress === 100
     );
 
     return {
-      objectifs,
+      savings,
+      incomes,
       summary: {
-        completed: completed.length,
-        opened: opened.length,
-        total: objectifs.length,
-        progress: (completed.length / objectifs.length) * 100,
+        objectifs: {
+          completed: savingsCompleted.length + incomesCompleted.length,
+          opened: savingsOpened.length + incomesOpened.length,
+          total: objectifs.length,
+          progress:
+            ((savingsCompleted.length + incomesCompleted.length) /
+              objectifs.length) *
+            100,
+        },
+        savings: {
+          completed: savingsCompleted.length,
+          opened: savingsOpened.length,
+          total: savings.length,
+          progress: (savingsCompleted.length / savings.length) * 100,
+        },
+        incomes: {
+          completed: incomesCompleted.length,
+          opened: incomesOpened.length,
+          total: incomes.length,
+          progress: (incomesCompleted.length / incomes.length) * 100,
+        },
       },
     };
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} objcetif`;
-  }
-
-  update(id: number, updateObjcetifDto: UpdateObjcetifDto) {
-    return `This action updates a #${id} objcetif`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} objcetif`;
   }
 }

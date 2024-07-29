@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockConfigService, MockMailerService } from '../test/mock';
 import setupEnvironment from "../test/setup";
-import injectData, { injectItems, truncareDb } from '../test/syncDB';
+import injectData, { injectItem, truncateDb } from '../test/syncDB';
 import { wait } from '../test/test.utils';
 import { CreateItemDto } from './dto/create-item.dto';
 
@@ -46,21 +46,21 @@ describe('ItemController', () => {
   
 
   it('should return an array of items', async () => {
-    await injectItems({accountId, userId});
+    await injectItem({accountId, userId});
     const result = await controller.findAll();
     expect(result).toHaveLength(1);        
   });
 
   describe('findAll', ()=>{
     it('should return an array of items', async () => {
-      await injectItems({accountId, userId});
+      await injectItem({accountId, userId});
       wait()
       const result = await controller.findAll();
       expect(result).toHaveLength(1);        
     });
 
     it('should return an array of items by account', async () => {
-      await injectItems({accountId, userId});
+      await injectItem({accountId, userId});
       const req : any = {
         query: {  
           page: 0
@@ -111,7 +111,7 @@ const req : any = {
     })
 
     it('should update item', async () => {
-      const newItem = await injectItems({accountId, userId});
+      const newItem = await injectItem({accountId, userId});
       const body : CreateItemDto = {
         count: 1,
         items: [{
@@ -202,5 +202,5 @@ const req : any = {
   
 
   afterEach(async () => {
-    truncareDb();});
+    truncateDb();});
 });
