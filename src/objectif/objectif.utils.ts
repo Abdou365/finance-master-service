@@ -51,6 +51,12 @@ export const getCurrentInterval = (recurrence, recurrenceInterval) => {
   const before = [];
   const after = [];
 
+  if (recurrence === 'year') {
+    return {
+      from: everyFirstOfTheYear(),
+      to: nextWeek(),
+    };
+  }
   const rec = {
     weeks: everyMondayOfTheyear(),
     months: everyFirstOfTheMonth(),
@@ -70,7 +76,6 @@ export const getCurrentInterval = (recurrence, recurrenceInterval) => {
       }
     }
   }
-
   return {
     from: before[before.length - 1],
     to: after[0],
@@ -83,27 +88,12 @@ function calculateProgress(
   type?: string
 ): number {
   const progress = (currentAmount / targetAmount) * 100;
+  if (type === 'savings') {
+    return currentAmount < targetAmount
+      ? 100
+      : (targetAmount / currentAmount) * 100;
+  }
   return progress > 100 ? 100 : progress;
-}
-
-function getTimeAgo(interval: number, unit: string): number {
-  const multiplier = {
-    day: 1000 * 60 * 60 * 24,
-    week: 1000 * 60 * 60 * 24 * 7,
-    month: 1000 * 60 * 60 * 24 * 30,
-    year: 1000 * 60 * 60 * 24 * 365,
-  }[unit];
-  return new Date().valueOf() - multiplier * interval;
-}
-
-function filterItemsByDate(
-  items: Partial<Item>[],
-  from: Date,
-  to: Date
-): Partial<Item>[] {
-  return items.filter(
-    item => new Date(item.date) >= from && new Date(item?.date) <= to
-  );
 }
 
 export function calculateCurrentAmount(
@@ -156,14 +146,8 @@ export const computeObjectif = (
 
     let currentAmount = 0;
 
-    if (
-      isRecurrent &&
-      recurrence &&
-      ['days', 'weeks', 'years', 'months'].includes(`${recurrence}s`) &&
-      recurrenceInterval > 0
-    ) {
-      const interval = recurrenceInterval - 1;
-      const { from, to } = getCurrentInterval(recurrence, interval);
+    if (isRecurrent && recurrence && recurrenceInterval > 0) {
+      const { from, to } = getCurrentInterval(recurrence, recurrenceInterval);
 
       currentAmount = calculateCurrentAmount(
         relevantItems,

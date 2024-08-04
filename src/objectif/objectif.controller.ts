@@ -37,7 +37,6 @@ export class ObjectifController {
     @Param('userId') userId: string,
     @Param('accountId') accountId: string
   ) {
-    console.log('userId', userId);
     return await this.objcetifService.findAll({
       userId,
       accountId,

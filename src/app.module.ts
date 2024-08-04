@@ -13,8 +13,6 @@ import { ItemModule } from './item/item.module';
 import { NotificationModule } from './notification/notification.module';
 import { ObjectifModule } from './objectif/objectif.module';
 
-console.log(process.env.NODE_ENV);
-
 @Module({
   imports: [
     AccountModule,
@@ -31,7 +29,6 @@ console.log(process.env.NODE_ENV);
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (ConfigService: ConfigService) => {
-    
         return {
           defaults: {
             from: `"No Reply" <${ConfigService.get('mail.user')}>`,

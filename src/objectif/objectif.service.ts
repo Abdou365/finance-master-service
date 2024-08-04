@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { partition } from 'lodash';
+import { partition, sum, sumBy } from 'lodash';
 import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
 import { computeObjectif } from './objectif.utils';
 
@@ -60,22 +60,19 @@ export class ObjectifService {
           completed: savingsCompleted.length + incomesCompleted.length,
           opened: savingsOpened.length + incomesOpened.length,
           total: objectifs.length,
-          progress:
-            ((savingsCompleted.length + incomesCompleted.length) /
-              objectifs.length) *
-            100,
+          progress: sumBy(objectifs, 'progress') / (objectifs.length || 1),
         },
         savings: {
           completed: savingsCompleted.length,
           opened: savingsOpened.length,
           total: savings.length,
-          progress: (savingsCompleted.length / savings.length) * 100,
+          progress: sumBy(savings, 'progress') / (savings.length || 1),
         },
         incomes: {
           completed: incomesCompleted.length,
           opened: incomesOpened.length,
           total: incomes.length,
-          progress: (incomesCompleted.length / incomes.length) * 100,
+          progress: sumBy(incomes, 'progress') / (incomes.length || 1),
         },
       },
     };
