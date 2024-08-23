@@ -7,13 +7,15 @@ import {
   ParseUUIDPipe,
   Post,
   Req,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
+import { Item } from '@prisma/client';
 import { Request } from 'express';
-import { CreateItemDto } from './dto/create-item.dto';
-import { ItemService } from './item.service';
+import { pick } from 'lodash';
 import { ResponseInterceptor } from '../interceptor/response.interceptor';
 import { MESSAGE_SUCCESSFETCH } from '../interceptor/response.messages';
+import { CreateItemDto } from './dto/create-item.dto';
+import { ItemService } from './item.service';
 
 @Controller('item')
 export class ItemController {
@@ -27,23 +29,41 @@ export class ItemController {
       body.count > 100
     ) {
       throw new BadRequestException(
-        'You have reached the limit of items you can upload',
+        'You have reached the limit of items you can upload'
       );
     }
 
-    const update =  body.items.map(
-      async (data : any) =>
-        await this.itemService.upsert({
-          where: { id: data.id },
-          create: data,
-          update: data,
-        }),
-    );    
-
+    const update = body.items.map(async (data: any) => {
+      const currentItems: Item = pick(
+        {
+          value: 0,
+          isExpense: false,
+          status: 'published',
+          ...data,
+        },
+        'accountId',
+        'category',
+        'createdAt',
+        'date',
+        'description',
+        'id',
+        'status',
+        'title',
+        'updatedAt',
+        'userId',
+        'value',
+        'isExpense'
+      );
+      return await this.itemService.upsert({
+        where: { id: data.id },
+        create: currentItems,
+        update: currentItems,
+      });
+    });
   }
 
   @Get()
- async findAll() {
+  async findAll() {
     return this.itemService.findAll();
   }
 
@@ -51,9 +71,9 @@ export class ItemController {
   @Get('/all/:accountId')
   findByAccount(
     @Param('accountId', ParseUUIDPipe) accountId: string,
-    @Req() req: Request,
+    @Req() req: Request
   ) {
-    const { page} = req.query;
+    const { page } = req.query;
 
     return this.itemService.findAllByAccount({
       where: { accountId, status: 'published' },
@@ -63,7 +83,7 @@ export class ItemController {
   }
   @Get('/category/:accountId')
   async findItemsCategory(
-    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Param('accountId', ParseUUIDPipe) accountId: string
   ) {
     return await this.itemService.findAllItemCategory(accountId);
   }

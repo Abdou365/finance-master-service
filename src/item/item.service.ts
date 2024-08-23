@@ -37,6 +37,6 @@ export class ItemService {
     group By category
     `);
 
-    return res.map((cat) => cat.category);
+    return res.map(cat => cat.category);
   };
 }
