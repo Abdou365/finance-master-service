@@ -8,6 +8,8 @@ import {
   Post,
   Req,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Item } from '@prisma/client';
 import { Request } from 'express';
@@ -22,42 +24,27 @@ export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   @Post()
-  async upsert(@Body() body: CreateItemDto, @Req() req: Request) {
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async upsert(
+    @Body()
+    createItemDTO: CreateItemDto,
+    @Req() req: Request
+  ) {
     if (
       (req.signedCookies['user'].role !== 'admin' ||
         req.signedCookies['user'].role !== 'premium') &&
-      body.count > 100
+      createItemDTO.count > 100
     ) {
       throw new BadRequestException(
         'You have reached the limit of items you can upload'
       );
     }
 
-    const update = body.items.map(async (data: any) => {
-      const currentItems: Item = pick(
-        {
-          value: 0,
-          isExpense: false,
-          status: 'published',
-          ...data,
-        },
-        'accountId',
-        'category',
-        'createdAt',
-        'date',
-        'description',
-        'id',
-        'status',
-        'title',
-        'updatedAt',
-        'userId',
-        'value',
-        'isExpense'
-      );
+    const update = createItemDTO.items.map(async (data: any) => {
       return await this.itemService.upsert({
         where: { id: data.id },
-        create: currentItems,
-        update: currentItems,
+        create: data,
+        update: data,
       });
     });
   }

@@ -31,7 +31,7 @@ export const computeExpiresIn = (expiresIn: string): number => {
   const expiresInArray = expiresIn.match(/(\d+)(\w+)/);
   if (!expiresInArray) {
     throw new Error(
-      "Invalid format. Expected format: <number><unit> (e.g., '10s', '5m').",
+      "Invalid format. Expected format: <number><unit> (e.g., '10s', '5m')."
     );
   }
   const [_, value, unit] = expiresInArray;
@@ -48,7 +48,7 @@ export const computeExpiresIn = (expiresIn: string): number => {
 
   if (!unitMap[unit]) {
     throw new Error(
-      `Invalid unit '${unit}'. Allowed units: s, m, h, d, w, mo.`,
+      `Invalid unit '${unit}'. Allowed units: s, m, h, d, w, mo.`
     );
   }
 
