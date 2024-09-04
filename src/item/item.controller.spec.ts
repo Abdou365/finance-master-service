@@ -3,7 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockConfigService, MockMailerService } from '../test/mock';
 import setupEnvironment from '../test/setup';
-import injectData, { injectItems, truncareDb } from '../test/syncDB';
+import injectData, {
+  injectItem,
+  injectItems,
+  truncareDb,
+} from '../test/syncDB';
 import { wait } from '../test/test.utils';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ItemController } from './item.controller';
@@ -104,7 +108,7 @@ describe('ItemController', () => {
     });
 
     it('should update item', async () => {
-      const newItem = await injectItems({ accountId, userId });
+      const newItem = await injectItem({ accountId, userId });
       const body: CreateItemDto = {
         count: 1,
         items: [

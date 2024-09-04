@@ -114,7 +114,7 @@ export const injectItems = async ({
 }: {
   accountId: string;
   userId: string;
-  items: Partial<Item>[];
+  items?: Partial<Item>[];
 }) => {
   const injectedItems = await Promise.all(
     items.map(async item => {
