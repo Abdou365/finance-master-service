@@ -12,7 +12,6 @@ import { wait } from '../test/test.utils';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ItemController } from './item.controller';
 import { ItemService } from './item.service';
-import { da } from '@faker-js/faker';
 
 let accountId;
 let userId;
@@ -47,20 +46,20 @@ describe('ItemController', () => {
   });
 
   it('should return an array of items', async () => {
-    await injectItems({ accountId, userId });
+    await injectItem({ accountId, userId });
     const result = await controller.findAll();
     expect(result).toHaveLength(1);
   });
 
   describe('findAll', () => {
     it('should return an array of items', async () => {
-      await injectItems({ accountId, userId });
+      await injectItem({ accountId, userId });
       const result = await controller.findAll();
       expect(result).toHaveLength(1);
     });
 
     it('should return an array of items by account', async () => {
-      await injectItems({ accountId, userId });
+      await injectItem({ accountId, userId });
       const req: any = {
         query: {
           page: 0,
