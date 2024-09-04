@@ -9,7 +9,7 @@ import {
   Req,
   Res,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
@@ -33,7 +33,7 @@ export class AuthController {
 
   @Public()
   @UseInterceptors(
-    new ResponseInterceptor(MESSAGE_SUCCESS_REGISTRATION_CONFIRM_SENT),
+    new ResponseInterceptor(MESSAGE_SUCCESS_REGISTRATION_CONFIRM_SENT)
   )
   @Post('register')
   async create(@Body() body: { email: string; password: string }) {
@@ -45,11 +45,11 @@ export class AuthController {
   @UseInterceptors(new ResponseInterceptor(MESSAGE_SUSSUCCESS_REGISTER))
   async confirmRegistration(
     @Body() body: { token: string; code: number },
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const newUser = await this.authService.confirmRegistration(
       body.token,
-      body.code,
+      body.code
     );
     setCookies({ res, access_token: newUser.access_token, user: newUser.user });
     return newUser.user;
@@ -62,7 +62,7 @@ export class AuthController {
   @UseInterceptors(new ResponseInterceptor(MESSAGE_SUSSUCCESS_LOGIN))
   async confirmLogin(
     @Body() body: { token: string; code: number },
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const newUser = await this.authService.confirmLogin(body.token, +body.code);
     setCookies({ res, access_token: newUser.access_token, user: newUser.user });
@@ -74,11 +74,12 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    console.log(req.url);
+
     const jwt = await this.authService.login(
       req.body.username, // email
-      req.body.password,
+      req.body.password
     );
-
   }
 
   // recover password
@@ -95,7 +96,7 @@ export class AuthController {
   async confirmRecover(
     @Body()
     body: recoveryPasswordDto,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     if (body.password !== body.password_confirmation) {
       throw new NotAcceptableException('Password mismatch');
@@ -105,7 +106,7 @@ export class AuthController {
       body.token,
       body.code,
       body.password,
-      body.email,
+      body.email
     );
     setCookies({ res, access_token: newUser.access_token, user: newUser.user });
     return newUser.user;
@@ -115,12 +116,12 @@ export class AuthController {
 
   @Post('change/email')
   async changeEmail(
-    @Body() body: { email: string; newEmail: string; password: string },
+    @Body() body: { email: string; newEmail: string; password: string }
   ) {
     await this.authService.requestEmailChange(
       body.email,
       body.newEmail,
-      body.password,
+      body.password
     );
   }
 
@@ -129,11 +130,11 @@ export class AuthController {
   @UseInterceptors(new ResponseInterceptor('Email changed successfully'))
   async confirmChangeEmail(
     @Body() body: { token: string; code: number },
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const newUser = await this.authService.confirmEmailChange(
       body.token,
-      +body.code,
+      +body.code
     );
     setCookies({ res, access_token: newUser.access_token, user: newUser.user });
     return newUser.user;
@@ -144,7 +145,7 @@ export class AuthController {
   @Get('logout/:id')
   async logout(
     @Param('id', ParseUUIDPipe) id: string,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     removeCookies(res);
     await this.authService.logout(id);

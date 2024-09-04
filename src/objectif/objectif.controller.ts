@@ -1,21 +1,18 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
-  Patch,
   Post,
   UseInterceptors,
 } from '@nestjs/common';
 import { Objectif } from '@prisma/client';
-import { ResponseInterceptor } from 'src/interceptor/response.interceptor';
 import {
   MESSAGE_SUCCESSCREATE,
   MESSAGE_SUCCESSFETCH,
-} from 'src/interceptor/response.messages';
-import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
+} from '../interceptor/response.messages';
 import { ObjectifService } from './objectif.service';
+import { ResponseInterceptor } from '../interceptor/response.interceptor';
 
 @Controller('objectif')
 export class ObjectifController {
@@ -25,9 +22,9 @@ export class ObjectifController {
   @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSCREATE))
   create(
     @Body()
-    createObjcetifDto: Objectif,
+    createObjcetifDto: Objectif
   ) {
-    return this.objcetifService.create({
+    return this.objcetifService.upsert({
       where: { id: createObjcetifDto.id },
       create: createObjcetifDto,
       update: createObjcetifDto,
@@ -38,7 +35,7 @@ export class ObjectifController {
   @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSFETCH))
   async findAll(
     @Param('userId') userId: string,
-    @Param('accountId') accountId: string,
+    @Param('accountId') accountId: string
   ) {
     return await this.objcetifService.findAll({
       userId,
@@ -51,30 +48,12 @@ export class ObjectifController {
   @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSFETCH))
   async bulkDelete(
     @Param('userId') userId: string,
-    @Param('accountId') accountId: string,
+    @Param('accountId') accountId: string
   ) {
     return await this.objcetifService.findAll({
       userId,
       accountId,
       status: 'active' || 'completed',
     });
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.objcetifService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateObjcetifDto: UpdateObjcetifDto,
-  ) {
-    return this.objcetifService.update(+id, updateObjcetifDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.objcetifService.remove(+id);
   }
 }

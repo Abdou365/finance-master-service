@@ -21,7 +21,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private reflector: Reflector,
     private jwt: JwtService,
-    private auth: AuthService,
+    private auth: AuthService
   ) {
     super();
   }
@@ -32,7 +32,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
    * @returns A boolean, a promise that resolves to a boolean, an observable that emits a boolean, or any other value.
    */
   async canActivate(
-    context: ExecutionContext,
+    context: ExecutionContext
   ): Promise<boolean | Promise<boolean> | Observable<boolean> | any> {
     // Checks if the route is public or requires authentication.
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -61,20 +61,25 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     } catch (error) {
       // If the access token is invalid, try to use the refresh token.
+
       if (user) {
         // Fetch the user and their authentication info from the database.
-        const auth = await this.prisma.user.findUnique({
-          where: { id: user.id },
-          include: {
-            Authentication: {
-              select: {
-                id: true,
-                refreshToken: true,
-                refreshExpiresAt: true,
+        const auth = await this.prisma.user
+          .findUnique({
+            where: { id: user.id },
+            include: {
+              Authentication: {
+                select: {
+                  id: true,
+                  refreshToken: true,
+                  refreshExpiresAt: true,
+                },
               },
             },
-          },
-        });
+          })
+          .catch(error => {
+            throw new UnauthorizedException('Invalid credentials');
+          });
 
         if (
           auth &&
@@ -88,7 +93,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
               auth.Authentication.refreshToken,
               {
                 secret: jwtSecretsPublic.refresh_token,
-              },
+              }
             );
 
             if (payload) {
