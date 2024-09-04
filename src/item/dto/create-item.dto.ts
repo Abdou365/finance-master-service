@@ -8,12 +8,13 @@ import {
   IsDate,
   IsEnum,
   IsNumber,
+  IsOptional,
+  IsPositive,
   IsString,
   IsUUID,
-  Min,
-  MinLength,
   ValidateNested,
 } from 'class-validator';
+import { lowerCase } from 'lodash';
 
 class ItemsDto {
   @IsUUID()
@@ -23,25 +24,43 @@ class ItemsDto {
   @IsString()
   description: string;
   @IsString()
-  @Transform(
-    ({ value }) => {
-      return new Date(value).toISOString();
-    },
-    { toClassOnly: true }
-  )
+  @Transform(({ value }) => new Date(value).toISOString())
   date: string;
+  @IsString()
+  @IsOptional()
   category: string;
   @IsUUID()
   accountId: string;
   @IsUUID()
   userId: string;
-  @IsDate()
-  createdAt: Date;
-  @IsDate()
-  updatedAt: Date;
+  @IsString()
+  createdAt: string;
+  @IsString()
+  updatedAt: string;
   @IsNumber()
+  @IsPositive({
+    message() {
+      return 'La valeur doit être positive, soit un nombre supérieur à 0';
+    },
+  })
+  @Type(() => Number)
   value: number;
   @IsBoolean()
+  @Type(() => Boolean)
+  @Transform(({ value, obj }) => {
+    if (obj.isExpense && typeof obj.isExpense === 'string') {
+      return (
+        obj.isExpense === 'true' ||
+        lowerCase(
+          obj?.isExpense.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        ) === 'depense' ||
+        obj.isExpense === '1' ||
+        obj.isExpense === 'yes' ||
+        obj.isExpense === 'oui'
+      );
+    }
+    return !!value;
+  })
   isExpense: boolean;
   @IsEnum($Enums.ItemStatus)
   status: string;
@@ -52,6 +71,7 @@ export class CreateItemDto {
   @ValidateNested({ each: true })
   @ArrayMinSize(1)
   @ArrayMaxSize(200)
+  @Type(() => ItemsDto)
   items: ItemsDto[];
   @IsNumber()
   count: number;

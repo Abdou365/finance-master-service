@@ -164,7 +164,7 @@ describe('computeObjectif', () => {
       to: new Date('2022-01-31'),
       targetAmount: 1000,
       currentAmount: 300,
-      progress: 30,
+      progress: 100,
     };
     const computedObjectifs = computeObjectif(objectifs, items);
 

@@ -4,7 +4,7 @@ import injectData, {
   generateItems,
   injectItems,
   injectObjectif,
-  truncateDb,
+  truncareDb,
 } from '../test/syncDB';
 import { ObjectifController } from './objectif.controller';
 import { ObjectifService } from './objectif.service';
@@ -53,10 +53,11 @@ describe('ObjcetifController', () => {
   it('should show all objectifs', async () => {
     const objectifs: any = await controller.findAll(userId, accountId);
 
-    expect(objectifs.objectifs).toHaveLength(1);
+    expect(objectifs.incomes).toHaveLength(1);
+    expect(objectifs.savings).toHaveLength(0);
   });
 
   afterEach(async () => {
-    await truncateDb();
+    await truncareDb();
   });
 });

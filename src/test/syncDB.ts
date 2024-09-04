@@ -1,4 +1,4 @@
-import { fa, faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { Item, Objectif, PrismaClient } from '@prisma/client';
 
 const db = new PrismaClient();
@@ -33,17 +33,6 @@ const initiateDb = async () => {
   }
 };
 
-const injectData = async () => {
-  const res = await initiateDb();
-  const account = res?.Account[0];
-
-  return {
-    id: res?.id,
-    account: account,
-    users: res,
-  };
-};
-
 export const injectItem = async ({
   accountId,
   userId,
@@ -67,23 +56,6 @@ export const injectItem = async ({
     },
   });
   return item;
-};
-
-export const injectItems = async ({
-  accountId,
-  userId,
-  items = [],
-}: {
-  accountId: string;
-  userId: string;
-  items: Partial<Item>[];
-}) => {
-  const injectedItems = await Promise.all(
-    items.map(async item => {
-      return await injectItem({ accountId, userId, ...item });
-    })
-  );
-  return injectedItems;
 };
 
 export const injectObjectif = async ({
@@ -111,23 +83,6 @@ export const injectObjectif = async ({
   return objectif;
 };
 
-export const injectObjectifs = async ({
-  accountId,
-  userId,
-  objectifs = [],
-}: {
-  accountId: string;
-  userId: string;
-  objectifs: Partial<Objectif>[];
-}) => {
-  const injectedObjectifs = await Promise.all(
-    objectifs.map(async objectif => {
-      return await injectObjectif({ accountId, userId, ...objectif });
-    })
-  );
-  return injectedObjectifs;
-};
-
 export const generateItems = ({
   userId,
   accountId,
@@ -152,13 +107,31 @@ export const generateItems = ({
   return items;
 };
 
-export const truncateDb = async () => {
+export const injectItems = async ({
+  accountId,
+  userId,
+  items = [],
+}: {
+  accountId: string;
+  userId: string;
+  items: Partial<Item>[];
+}) => {
+  const injectedItems = await Promise.all(
+    items.map(async item => {
+      return await injectItem({ accountId, userId, ...item });
+    })
+  );
+  return injectedItems;
+};
+
+export const truncareDb = async () => {
   try {
-    await db.item.deleteMany();
-    await db.objectif.deleteMany();
-    await db.account.deleteMany();
-    await db.authentication.deleteMany();
-    await db.user.deleteMany();
+    await db.item.deleteMany({ where: {} });
+    await db.objectif.deleteMany({ where: {} });
+    await db.account.deleteMany({ where: {} });
+    await db.objectif.deleteMany({ where: {} });
+    await db.authentication.deleteMany({ where: {} });
+    await db.user.deleteMany({ where: {} });
   } catch (error) {
     console.error('Error truncating the database:', error);
   } finally {
@@ -166,4 +139,14 @@ export const truncateDb = async () => {
   }
 };
 
+const injectData = async () => {
+  const res = await initiateDb();
+  const account = res?.Account[0];
+
+  return {
+    id: res?.id,
+    account: account,
+    users: res,
+  };
+};
 export default injectData;
