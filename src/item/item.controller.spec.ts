@@ -3,11 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MockConfigService, MockMailerService } from '../test/mock';
 import setupEnvironment from '../test/setup';
-import injectData, {
-  injectItem,
-  injectItems,
-  truncareDb,
-} from '../test/syncDB';
+import injectData, { injectItem, truncareDb } from '../test/syncDB';
 import { wait } from '../test/test.utils';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ItemController } from './item.controller';

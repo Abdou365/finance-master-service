@@ -11,9 +11,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { Item } from '@prisma/client';
 import { Request } from 'express';
-import { pick } from 'lodash';
 import { ResponseInterceptor } from '../interceptor/response.interceptor';
 import { MESSAGE_SUCCESSFETCH } from '../interceptor/response.messages';
 import { CreateItemDto } from './dto/create-item.dto';

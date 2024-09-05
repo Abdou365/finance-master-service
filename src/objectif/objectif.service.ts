@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { partition, sum, sumBy } from 'lodash';
-import { UpdateObjcetifDto } from './dto/update-objcetif.dto';
+import { partition, sumBy } from 'lodash';
 import { computeObjectif } from './objectif.utils';
 
 @Injectable()

@@ -6,11 +6,12 @@ import injectData, {
   injectObjectif,
   truncareDb,
 } from '../test/syncDB';
+import { wait } from '../test/test.utils';
 import { ObjectifController } from './objectif.controller';
 import { ObjectifService } from './objectif.service';
 
-let userId;
-let accountId;
+let userId = null;
+let accountId = null;
 
 describe('ObjcetifController', () => {
   let controller: ObjectifController;
@@ -21,21 +22,22 @@ describe('ObjcetifController', () => {
 
   beforeEach(async () => {
     const userAndAccount = await injectData();
-    userId = userAndAccount.id;
-    accountId = userAndAccount.account.id;
 
-    const items = await injectItems({
-      accountId: userAndAccount.account.id,
-      userId: userAndAccount.id,
+    userId = userAndAccount.id;
+    accountId = userAndAccount.account?.id;
+
+    await injectItems({
+      accountId,
+      userId,
       items: generateItems({
-        userId: userAndAccount.id,
-        accountId: userAndAccount.account.id,
+        userId,
+        accountId,
       }),
     });
 
-    const objectif = await injectObjectif({
-      accountId: userAndAccount.account.id,
-      userId: userAndAccount.id,
+    await injectObjectif({
+      accountId,
+      userId,
     });
 
     const module: TestingModule = await Test.createTestingModule({
@@ -53,11 +55,14 @@ describe('ObjcetifController', () => {
   it('should show all objectifs', async () => {
     const objectifs: any = await controller.findAll(userId, accountId);
 
-    expect(objectifs.incomes).toHaveLength(1);
-    expect(objectifs.savings).toHaveLength(0);
+    expect(objectifs?.incomes).toHaveLength(1);
+    expect(objectifs?.savings).toHaveLength(0);
   });
 
   afterEach(async () => {
+    await truncareDb();
+  });
+  afterAll(async () => {
     await truncareDb();
   });
 });
