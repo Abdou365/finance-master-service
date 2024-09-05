@@ -15,19 +15,21 @@ export function setCookies({
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       signed: true,
+      sameSite: 'none',
     });
   }
   if (res) {
     res.cookie(
       'exipresIn',
       new Date(
-        new Date().valueOf() + computeExpiresIn(jwtExpiresIn.refresh_token),
+        new Date().valueOf() + computeExpiresIn(jwtExpiresIn.refresh_token)
       ),
       {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         signed: true,
-      },
+        sameSite: 'none',
+      }
     );
   }
 
@@ -37,7 +39,7 @@ export function setCookies({
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       signed: true,
-      sameSite: true,
+      sameSite: 'none',
     });
   }
 }

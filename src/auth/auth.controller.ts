@@ -74,8 +74,6 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    console.log(req.url);
-
     const jwt = await this.authService.login(
       req.body.username, // email
       req.body.password
