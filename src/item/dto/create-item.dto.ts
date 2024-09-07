@@ -5,7 +5,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -23,7 +23,7 @@ class ItemsDto {
   title: string;
   @IsString()
   description: string;
-  @IsString()
+  @IsDateString()
   @Transform(({ value }) => new Date(value).toISOString())
   date: string;
   @IsString()
@@ -33,9 +33,10 @@ class ItemsDto {
   accountId: string;
   @IsUUID()
   userId: string;
-  @IsString()
+  @IsDateString()
   createdAt: string;
-  @IsString()
+  @IsDateString()
+  @IsOptional()
   updatedAt: string;
   @IsNumber()
   @IsPositive({
