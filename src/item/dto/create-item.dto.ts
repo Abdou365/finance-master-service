@@ -12,6 +12,7 @@ import {
   IsPositive,
   IsString,
   IsUUID,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { lowerCase } from 'lodash';
@@ -38,6 +39,11 @@ class ItemsDto {
   @IsDateString()
   @IsOptional()
   updatedAt: string;
+  @ValidateIf(o => {
+    return (
+      o.status !== ($Enums.ItemStatus.deleted || $Enums.ItemStatus.archived)
+    );
+  })
   @IsNumber()
   @IsPositive({
     message() {

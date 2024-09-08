@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    cors: { origin: true, credentials: true },
+    cors: { origin: [process.env.FRONT_URL], credentials: true },
   });
   app.use(cookieParser(process.env.COOKIE_SECRET));
 

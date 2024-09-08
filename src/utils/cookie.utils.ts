@@ -14,8 +14,9 @@ export function setCookies({
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      domain: process.env.COOKIE_DOMAIN,
       signed: true,
-      sameSite: 'none',
+      sameSite: 'strict',
     });
   }
   if (res) {
@@ -28,7 +29,8 @@ export function setCookies({
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         signed: true,
-        sameSite: 'none',
+        domain: process.env.COOKIE_DOMAIN,
+        sameSite: 'strict',
       }
     );
   }
@@ -38,8 +40,9 @@ export function setCookies({
       maxAge: computeExpiresIn(jwtExpiresIn.refresh_token),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      domain: process.env.COOKIE_DOMAIN,
       signed: true,
-      sameSite: 'none',
+      sameSite: 'strict',
     });
   }
 }
