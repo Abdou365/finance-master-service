@@ -64,7 +64,6 @@ export const injectObjectif = async ({
   title = faker.commerce.productName(),
   description = faker.commerce.productDescription(),
   targetAmount = 100,
-  deadline = new Date(),
   categories = ['Test'],
   type = 'income',
 }: Partial<Objectif>) => {
@@ -73,7 +72,6 @@ export const injectObjectif = async ({
       title,
       description,
       targetAmount,
-      deadline,
       userId,
       accountId,
       categories,

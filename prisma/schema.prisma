@@ -130,13 +130,11 @@ model Objectif {
   description        String?        @db.Text
   from               DateTime?
   to                 DateTime?
-  deadline           DateTime?
   targetAmount       Float
   categories         String[]
   isRecurrent        Boolean        @default(false)
   recurrence         Recurrence?
   recurrenceInterval Int?           @default(1)
-  isCompleted        Boolean        @default(false)
   type               ObjectifType   @default(savings)
   Account            Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
   status             ObjectifStatus @default(active)

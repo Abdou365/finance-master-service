@@ -5,6 +5,8 @@ import {
   Param,
   Post,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Objectif } from '@prisma/client';
 import {
@@ -13,16 +15,18 @@ import {
 } from '../interceptor/response.messages';
 import { ObjectifService } from './objectif.service';
 import { ResponseInterceptor } from '../interceptor/response.interceptor';
+import { CreateObjcetifDto } from './dto/create-objcetif.dto';
 
 @Controller('objectif')
 export class ObjectifController {
   constructor(private readonly objcetifService: ObjectifService) {}
 
   @Post()
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   @UseInterceptors(new ResponseInterceptor(MESSAGE_SUCCESSCREATE))
   create(
     @Body()
-    createObjcetifDto: Objectif
+    createObjcetifDto: CreateObjcetifDto
   ) {
     return this.objcetifService.upsert({
       where: { id: createObjcetifDto.id },
