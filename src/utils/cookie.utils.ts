@@ -14,7 +14,6 @@ export function setCookies({
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      domain: process.env.COOKIE_DOMAIN,
       signed: true,
       sameSite: 'none',
     });
@@ -29,7 +28,6 @@ export function setCookies({
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         signed: true,
-        domain: process.env.COOKIE_DOMAIN,
         sameSite: 'none',
       }
     );
@@ -40,7 +38,6 @@ export function setCookies({
       maxAge: computeExpiresIn(jwtExpiresIn.refresh_token),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      domain: process.env.COOKIE_DOMAIN,
       signed: true,
       sameSite: 'none',
     });
