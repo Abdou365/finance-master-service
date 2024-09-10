@@ -16,7 +16,7 @@ export function setCookies({
       secure: process.env.NODE_ENV === 'production',
       domain: process.env.COOKIE_DOMAIN,
       signed: true,
-      sameSite: 'strict',
+      sameSite: 'none',
     });
   }
   if (res) {
@@ -30,7 +30,7 @@ export function setCookies({
         secure: process.env.NODE_ENV === 'production',
         signed: true,
         domain: process.env.COOKIE_DOMAIN,
-        sameSite: 'strict',
+        sameSite: 'none',
       }
     );
   }
@@ -42,7 +42,7 @@ export function setCookies({
       secure: process.env.NODE_ENV === 'production',
       domain: process.env.COOKIE_DOMAIN,
       signed: true,
-      sameSite: 'strict',
+      sameSite: 'none',
     });
   }
 }
