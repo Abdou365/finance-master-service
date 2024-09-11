@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -24,6 +25,14 @@ export class AccountController {
       create: data,
       update: data,
     });
+  }
+  @Delete(':userId/:id')
+  @UseInterceptors(new ResponseInterceptor('Account deleted'))
+  async delete(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('id', ParseUUIDPipe) id: string
+  ) {
+    return await this.accountService.delete(userId, id);
   }
 
   @Get()

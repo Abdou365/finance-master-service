@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { log } from 'console';
 import { groupBy, orderBy, partition, sumBy, uniq } from 'lodash';
@@ -33,7 +34,7 @@ LEFT JOIN public."Item" ON "Account"."id" = "Item"."accountId" AND "Item"."statu
 GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."userId";
         `;
 
-log(data);
+    log(data);
     return data;
   };
 
@@ -58,8 +59,8 @@ log(data);
    */
   findCurrentAll = async (id: string) => {
     // Execute a raw SQL query to retrieve account information for the given user ID.
-// Execute a raw SQL query to retrieve account information for the given user ID using Prisma's $queryRaw as a tagged template function.
-const data = await this.db.$queryRaw`
+    // Execute a raw SQL query to retrieve account information for the given user ID using Prisma's $queryRaw as a tagged template function.
+    const data = await this.db.$queryRaw`
 SELECT 
     "Account"."id",
     "Account"."title",  -- Include the account name
@@ -78,8 +79,8 @@ WHERE "Account"."userId" = ${id}
 GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."userId";
 `;
 
-return data;  
-};
+    return data;
+  };
 
   findOneById = async (id: string) => {
     const res = await this.account.findUnique({
@@ -107,17 +108,17 @@ return data;
     });
 
     const repartition = (items: any[]) => {
-      const expenseItems = items?.filter((i) => i.isExpense);
+      const expenseItems = items?.filter(i => i.isExpense);
       const itemsbyCategory = groupBy(expenseItems, 'category');
       const categories = Object.keys(itemsbyCategory);
 
-      return [...categories].map((value) => {
+      return [...categories].map(value => {
         return { name: value, value: sumBy(itemsbyCategory[value], 'value') };
       });
     };
 
-    const summarize = (items) => {
-      const [decaiss, encaiss] = partition(items, (e) => e.isExpense);
+    const summarize = items => {
+      const [decaiss, encaiss] = partition(items, e => e.isExpense);
       const sommeEncaiss = sumBy(encaiss, 'value');
       const sommeDecaiss = sumBy(decaiss, 'value');
 
@@ -131,7 +132,7 @@ return data;
     const objectifs = computeObjectif(res.Objectif, res.Item);
     const [completed, opened] = partition(
       objectifs,
-      (objectif) => objectif.progress === 100,
+      objectif => objectif.progress === 100
     );
 
     const dateFilteredData = {
@@ -176,6 +177,30 @@ return data;
       where: { userId: id },
     });
   };
+
+  /**
+   * Deletes an account and its associated items.
+   *
+   * @param userId - The ID of the user who owns the account.
+   * @param id - The ID of the account to be deleted.
+   * @returns The deleted account.
+   * @throws ExceptionsHandler if an error occurs during deletion.
+   */
+  delete = async (userId: string, id: string) => {
+    try {
+      const account = await this.account.delete({
+        where: { userId, id },
+        include: { Item: true },
+      });
+      const deletedItems = account.Item;
+      const deletedItemsId = deletedItems.map(item => item.id);
+      await this.item.deleteMany({ where: { id: { in: deletedItemsId } } });
+      return account;
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      throw new ExceptionsHandler(error);
+    }
+  };
 }
 
 export const filterByDate = ({
@@ -190,7 +215,7 @@ export const filterByDate = ({
   limit?: number;
 }) => {
   const dates = uniq(
-    items?.map((item) => {
+    items?.map(item => {
       if (separateBy == 'year') {
         return new Date(item[name]!).getFullYear().toString();
       } else if (separateBy === 'month') {
@@ -208,7 +233,7 @@ export const filterByDate = ({
           .toString()
           .padStart(2, '0')}`;
       }
-    }),
+    })
   )
     .sort((a: any, b: any) => {
       return new Date(b).getTime() - new Date(a).getTime();
@@ -223,8 +248,8 @@ export const filterByDate = ({
   }[] = [];
   for (const date of dates) {
     const regex = new RegExp(date);
-    const filteredItem = items?.filter((i) =>
-      regex.test(new Date(i[name]).toISOString()),
+    const filteredItem = items?.filter(i =>
+      regex.test(new Date(i[name]).toISOString())
     );
     const [cashingList, paymentList] = partition(filteredItem, 'isExpense');
 
