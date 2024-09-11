@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient, User } from '@prisma/client';
@@ -22,7 +26,7 @@ export class AuthService {
     private notification: NotificationService,
     private jwtService: JwtService,
     private encription: Encryption,
-    private config: ConfigService,
+    private config: ConfigService
   ) {}
 
   /**
@@ -50,7 +54,7 @@ export class AuthService {
             confirmCode: code,
             confirmToken,
             confirmExpiresAt: new Date(
-              computeExpiresIn(jwtExpiresIn.confirm_token),
+              computeExpiresIn(jwtExpiresIn.confirm_token)
             ),
           },
         },
@@ -70,11 +74,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials, no user created');
     }
 
-
     this.notification.sendEmail(
       email,
       'Confirm your account',
-      `Your Secret Code : ${code} /n Click here to confirm your account: ${this.config.get<string>('front.url')}/auth?step=confirm-register&token=${confirmToken}`,
+      `Your Secret Code : ${code} /n Click here to confirm your account: ${this.config.get<string>('front.url')}/auth?step=confirm-register&token=${confirmToken}`
     );
   }
 
@@ -108,7 +111,7 @@ export class AuthService {
     }
     const isValid = this.encription.compare(
       password,
-      user.Authentication.password,
+      user.Authentication.password
     );
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -173,7 +176,7 @@ export class AuthService {
         this.notification.sendEmail(
           newUser.email,
           'Registration Success',
-          `You have successfully registered at ${new Date().toISOString()}`,
+          `You have successfully registered at ${new Date().toISOString()}`
         );
         return this.logUser(newUser);
       }
@@ -238,7 +241,7 @@ export class AuthService {
         this.notification.sendEmail(
           user.email,
           'Login Success',
-          `You have successfully logged in at ${new Date().toISOString()}`,
+          `You have successfully logged in at ${new Date().toISOString()}`
         );
         return this.logUser(user);
       }
@@ -264,7 +267,7 @@ export class AuthService {
           update: {
             refreshToken: this.generateRefreshToken(payload),
             refreshExpiresAt: new Date(
-              Date.now() + computeExpiresIn(jwtExpiresIn.refresh_token),
+              Date.now() + computeExpiresIn(jwtExpiresIn.refresh_token)
             ),
             lastLogin: new Date(),
           },
@@ -303,7 +306,7 @@ export class AuthService {
             confirmCode: code,
             confirmToken,
             confirmExpiresAt: new Date(
-              computeExpiresIn(jwtExpiresIn.confirm_token),
+              computeExpiresIn(jwtExpiresIn.confirm_token)
             ),
           },
         },
@@ -327,7 +330,7 @@ export class AuthService {
     this.notification.sendEmail(
       email,
       'Confirmer votre connexion',
-      `Your Secret Code : ${code} /n Cliquez pour confimer votre connexion: ${this.config.get<string>('front.url')}/auth?step=confirm-login&token=${confirmToken}`,
+      `Your Secret Code : ${code} /n Cliquez pour confimer votre connexion: ${this.config.get<string>('front.url')}/auth?step=confirm-login&token=${confirmToken}`
     );
   }
 
@@ -424,7 +427,7 @@ export class AuthService {
             recoveryCode: code,
             recoveryToken,
             recoveryExpiresAt: new Date(
-              computeExpiresIn(jwtExpiresIn.recovery_token),
+              computeExpiresIn(jwtExpiresIn.recovery_token)
             ),
           },
         },
@@ -434,7 +437,7 @@ export class AuthService {
     this.notification.sendEmail(
       email,
       'Recover your password',
-      `Your Secret Code : ${code} /n Click here to recover your password: ${this.config.get<string>('front.url')}/auth?step=confirm-recover&token=${recoveryToken}`,
+      `Your Secret Code : ${code} /n Click here to recover your password: ${this.config.get<string>('front.url')}/auth?step=recover-password&token=${recoveryToken}`
     );
   }
 
@@ -453,7 +456,7 @@ export class AuthService {
     token: string,
     code: number,
     password: string,
-    email: string,
+    email: string
   ) {
     const auth = await this.prisma.authentication.findFirst({
       where: {
@@ -517,7 +520,7 @@ export class AuthService {
         },
       });
       throw new UnauthorizedException(
-        'Invalid credentials, token invalid or expired',
+        'Invalid credentials, token invalid or expired'
       );
     }
   }
@@ -570,7 +573,7 @@ export class AuthService {
             confirmCode: code,
             confirmToken,
             confirmExpiresAt: new Date(
-              computeExpiresIn(jwtExpiresIn.confirm_token),
+              computeExpiresIn(jwtExpiresIn.confirm_token)
             ),
           },
         },
@@ -580,7 +583,7 @@ export class AuthService {
     this.notification.sendEmail(
       newEmail,
       'Confirm your email',
-      `Your Secret Code : ${code} /n Click here to confirm your email: ${this.config.get<string>('front.url')}/auth?step=confirm-email&token=${confirmToken}`,
+      `Your Secret Code : ${code} /n Click here to confirm your email: ${this.config.get<string>('front.url')}/auth?step=confirm-email&token=${confirmToken}`
     );
   }
 
@@ -633,7 +636,7 @@ export class AuthService {
         this.notification.sendEmail(
           user.email,
           'Email Change Success',
-          `You have successfully changed your email at ${new Date().toISOString()}`,
+          `You have successfully changed your email at ${new Date().toISOString()}`
         );
         return this.logUser(user);
       }
@@ -685,7 +688,15 @@ export class AuthService {
    * @param newPassword - The new password for the user.
    * @throws UnauthorizedException if the provided credentials are invalid.
    */
-  async changePassword(email: string, password: string, newPassword: string) {
+  async changePassword({
+    email,
+    password,
+    newPassword,
+  }: {
+    email: string;
+    password: string;
+    newPassword: string;
+  }) {
     const user = await this.prisma.user.findUnique({
       where: {
         email,
@@ -731,7 +742,124 @@ export class AuthService {
     this.notification.sendEmail(
       email,
       'Password Change Success',
-      `You have successfully changed your password at ${new Date().toISOString()}`,
+      `You have successfully changed your password at ${new Date().toISOString()}`
     );
+  }
+
+  /**
+   * Resets the user's password.
+   *
+   * @param params - The parameters for resetting the password.
+   * @param params.email - The email of the user.
+   * @param params.password - The current password of the user.
+   * @param params.newPassword - The new password to set.
+   * @param params.token - The recovery token.
+   * @param params.code - The recovery code.
+   *
+   * @throws {UnauthorizedException} If the credentials are invalid, the token is invalid or expired, or the user is not found.
+   *
+   * @returns {Promise<void>} A promise that resolves when the password has been successfully reset.
+   */
+  async resetPassword({
+    email,
+    password,
+    newPassword,
+    token,
+    code,
+  }: {
+    email: string;
+    password: string;
+    newPassword: string;
+    token: string;
+    code: number;
+  }) {
+    if (password === newPassword) {
+      throw new BadRequestException(
+        'Password and new password cannot be the same'
+      );
+    }
+
+    try {
+      this.jwtService.verify(token, {
+        secret: jwtSecretsPublic.recovery_token,
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: {
+          email,
+        },
+        include: {
+          Authentication: {
+            select: {
+              id: true,
+              loginType: true,
+              provider: true,
+              lastLogin: true,
+              password: true,
+              recoveryToken: true,
+              recoveryCode: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if (user.Authentication.recoveryToken !== token) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      if (user.Authentication.recoveryCode !== code) {
+        throw new UnauthorizedException('Invalid code');
+      }
+
+      if (!this.encription.compare(password, user.Authentication.password)) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          Authentication: {
+            update: {
+              password: this.encription.encrypt(newPassword),
+              passwordChangedAt: new Date().toISOString(),
+              recoveryToken: null,
+              recoveryCode: null,
+            },
+          },
+        },
+        include: {
+          Authentication: {
+            select: {
+              id: true,
+              loginType: true,
+              provider: true,
+              lastLogin: true,
+            },
+          },
+        },
+      });
+
+      if (!updatedUser) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      this.notification.sendEmail(
+        email,
+        'Password Change Success',
+        `You have successfully changed your password at ${new Date().toISOString()}`
+      );
+
+      return this.logUser(updatedUser);
+    } catch (error) {
+      throw new UnauthorizedException(
+        'Invalid credentials, token invalid or expired'
+      );
+    }
   }
 }

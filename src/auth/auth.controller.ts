@@ -84,8 +84,41 @@ export class AuthController {
   @Post('recover')
   @UseInterceptors(new ResponseInterceptor('Recovery email sent'))
   @Public()
-  async recoverPassword(@Body() body: { email: string }) {
+  async resetPassword(@Body() body: { email: string }) {
     await this.authService.recoveryPassword(body.email);
+  }
+
+  @Post('recover-password')
+  @Public()
+  @UseInterceptors(new ResponseInterceptor('Password recovered successfully'))
+  async recoverPassword(
+    @Body()
+    body: {
+      password: string;
+      newPassword: string;
+      email: string;
+      token: string;
+      code: number;
+    },
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const loggedUser = await this.authService.resetPassword(body);
+
+    setCookies({
+      res,
+      access_token: loggedUser.access_token,
+      user: loggedUser.user,
+    });
+
+    return loggedUser.user;
+  }
+
+  @Post('change-password')
+  @UseInterceptors(new ResponseInterceptor('Password changed successfully'))
+  async changePassword(
+    @Body() body: { password: string; newPassword: string; email: string }
+  ) {
+    await this.authService.changePassword(body);
   }
 
   @Post('confirm/recover')
