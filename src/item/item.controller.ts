@@ -23,6 +23,7 @@ export class ItemController {
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @UseInterceptors(new ResponseInterceptor('Items created/updated/removed'))
   async upsert(
     @Body()
     createItemDTO: CreateItemDto,

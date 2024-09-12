@@ -95,7 +95,6 @@ export class AuthController {
     @Body()
     body: {
       password: string;
-      newPassword: string;
       email: string;
       token: string;
       code: number;

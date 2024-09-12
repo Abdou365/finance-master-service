@@ -763,22 +763,14 @@ export class AuthService {
   async resetPassword({
     email,
     password,
-    newPassword,
     token,
     code,
   }: {
     email: string;
     password: string;
-    newPassword: string;
     token: string;
     code: number;
   }) {
-    if (password === newPassword) {
-      throw new BadRequestException(
-        'Password and new password cannot be the same'
-      );
-    }
-
     try {
       this.jwtService.verify(token, {
         secret: jwtSecretsPublic.recovery_token,
@@ -815,10 +807,6 @@ export class AuthService {
         throw new UnauthorizedException('Invalid code');
       }
 
-      if (!this.encription.compare(password, user.Authentication.password)) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
       const updatedUser = await this.prisma.user.update({
         where: {
           id: user.id,
@@ -826,7 +814,7 @@ export class AuthService {
         data: {
           Authentication: {
             update: {
-              password: this.encription.encrypt(newPassword),
+              password: this.encription.encrypt(password),
               passwordChangedAt: new Date().toISOString(),
               recoveryToken: null,
               recoveryCode: null,
