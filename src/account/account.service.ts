@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { log } from 'console';
+import { formatDate } from 'date-fns';
+import { cp } from 'fs';
 import { groupBy, orderBy, partition, sumBy, uniq } from 'lodash';
+import { format, sep } from 'path';
 import { computeObjectif } from 'src/objectif/objectif.utils';
 
 @Injectable()
@@ -140,13 +143,13 @@ GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."
         name: 'date',
         items: res.Item,
         separateBy: 'month',
-        limit: 12,
+        limit: 3,
       }).graph,
       year: filterByDate({
         name: 'date',
         items: res.Item,
         separateBy: 'year',
-        limit: 7,
+        limit: 1,
       }).graph,
       day: filterByDate({
         name: 'date',
@@ -203,6 +206,35 @@ GROUP BY "Account"."id", "Account"."title", "Account"."description", "Account"."
   };
 }
 
+const getDateList = ({ limit, separateBy }) => {
+  switch (separateBy) {
+    case 'year':
+      return Array.from({ length: limit || 5 }, (_, i) =>
+        formatDate(new Date(new Date().getFullYear() - i, 0, 1), 'yyyy')
+      );
+    case 'month':
+      return Array.from({ length: limit || 5 }, (_, i) =>
+        formatDate(
+          new Date(new Date().getFullYear(), new Date().getMonth() - i, 1),
+          'yyyy-MM'
+        )
+      );
+    case 'day':
+      return Array.from({ length: limit || 5 }, (_, i) =>
+        formatDate(
+          new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            new Date().getDate() - i
+          ),
+          'yyyy-MM-dd'
+        )
+      );
+    default:
+      return [];
+  }
+};
+
 export const filterByDate = ({
   name,
   items,
@@ -214,31 +246,28 @@ export const filterByDate = ({
   separateBy: 'year' | 'month' | 'day';
   limit?: number;
 }) => {
-  const dates = uniq(
-    items?.map(item => {
-      if (separateBy == 'year') {
-        return new Date(item[name]!).getFullYear().toString();
-      } else if (separateBy === 'month') {
-        return `${new Date(item[name]!).getFullYear().toString()}-${(
-          new Date(item[name]!).getMonth() + 1
-        )
-          .toString()
-          .padStart(2, '0')}`;
-      } else {
-        return `${new Date(item[name]!).getFullYear().toString()}-${(
-          new Date(item[name]!).getMonth() + 1
-        )
-          .toString()
-          .padStart(2, '0')}-${(new Date(item[name]!).getDay() + 1)
-          .toString()
-          .padStart(2, '0')}`;
-      }
-    })
-  )
-    .sort((a: any, b: any) => {
-      return new Date(b).getTime() - new Date(a).getTime();
-    })
-    .slice(0, limit || 5);
+  // const dates = uniq(
+  //   items?.map(item => {
+  //     if (separateBy == 'year') {
+  //       return new Date(item[name]).getFullYear().toString();
+  //     } else if (separateBy === 'month') {
+  //       return `${new Date(item[name]).getFullYear().toString()}-${(
+  //         new Date(item[name]!).getMonth() + 1
+  //       )
+  //         .toString()
+  //         .padStart(2, '0')}`;
+  //     } else {
+  //       const formattedDate = formatDate(new Date(item[name]), 'yyyy-MM-dd');
+  //       return formattedDate;
+  //     }
+  //   })
+  // )
+  //   .sort((a: any, b: any) => {
+  //     return new Date(b).getTime() - new Date(a).getTime();
+  //   })
+  //   .slice(0, limit || 5);
+
+  const dates = getDateList({ limit, separateBy });
   const output: Record<string, any> = {};
   const formatted: {
     name: string;
@@ -246,12 +275,13 @@ export const filterByDate = ({
     payment: number;
     amt: number;
   }[] = [];
+
   for (const date of dates) {
     const regex = new RegExp(date);
     const filteredItem = items?.filter(i =>
       regex.test(new Date(i[name]).toISOString())
     );
-    const [cashingList, paymentList] = partition(filteredItem, 'isExpense');
+    const [paymentList, cashingList] = partition(filteredItem, 'isExpense');
 
     const cashing = sumBy(cashingList, 'value');
     const payment = sumBy(paymentList, 'value');
