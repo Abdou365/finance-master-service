@@ -850,4 +850,24 @@ export class AuthService {
       );
     }
   }
+
+  async logDemoUser() {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: 'demo@demo.fr',
+      },
+      include: {
+        Authentication: {
+          select: {
+            id: true,
+            loginType: true,
+            provider: true,
+            lastLogin: true,
+          },
+        },
+      },
+    });
+
+    return this.logUser(user);
+  }
 }

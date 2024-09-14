@@ -185,4 +185,17 @@ export class AuthController {
   test() {
     return 'Hello World!';
   }
+
+  @Get('demo')
+  @Public()
+  @UseInterceptors(new ResponseInterceptor('Hello World!'))
+  async demo(@Res({ passthrough: true }) res: Response) {
+    const demoUSzer = await this.authService.logDemoUser();
+    setCookies({
+      res,
+      access_token: demoUSzer.access_token,
+      user: demoUSzer.user,
+    });
+    return demoUSzer.user;
+  }
 }
