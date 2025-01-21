@@ -13,6 +13,9 @@ COPY package*.json ./
 # Step 4: Install dependencies
 RUN npm install
 
+# Step 4.1: Open ssl installation
+RUN apk add --no-cache openssl
+
 # Step 5: Copy the Prisma schema file
 COPY prisma/schema.prisma ./prisma/
 
