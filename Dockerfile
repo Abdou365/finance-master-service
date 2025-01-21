@@ -1,10 +1,7 @@
 # syntax = docker/dockerfile:1.2
 
 # Step 1: Use an official Node.js runtime as a parent image
-FROM node:20-alpine AS builder
-
-# Step 4.1: Open ssl installation
-RUN apk add --no-cache openssl
+FROM node:20.15 as builder
 
 # Step 2: Set the working directory
 WORKDIR /app
@@ -37,18 +34,21 @@ RUN npm run build
 RUN npm prune --production
 
 # Step 11: Use a smaller base image for production
-FROM node:18-alpine AS runner
+FROM node:20.15-slim as production
+
+# Srep 11.1: Install the necessary dependencies
+RUN apt-get update && apt-get install -y openssl
 
 # Step 12: Set the working directory
 WORKDIR /app
 
-# Step 13: Copy the built application from the builder stage
+# # Step 13: Copy the built application from the builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/keys ./keys
 COPY --from=builder /app/prisma ./prisma
-# COPY --from=builder /app/.env.production ./
+COPY --from=builder /app/.env.production ./
 
 # Step 14: Expose the port the app runs on
 EXPOSE 3000
